@@ -22,6 +22,8 @@
 {
     // Override point for customization after application launch.
     
+    [[UIApplication sharedApplication] setMinimumBackgroundFetchInterval:UIApplicationBackgroundFetchIntervalMinimum];
+    
     NSLog(@"APP Launch time.");
     
     if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
@@ -32,11 +34,7 @@
         UINavigationController *masterNavigationController = splitViewController.viewControllers[0];
         RouletteTestingMasterViewController *controller = (RouletteTestingMasterViewController *)masterNavigationController.topViewController;
         controller.managedObjectContext = self.managedObjectContext;
-    } //else {
-//        UINavigationController *navigationController = (UINavigationController *)self.window.rootViewController;
-//        RouletteTestingMasterViewController *controller = (RouletteTestingMasterViewController *)navigationController.topViewController;
-//        controller.managedObjectContext = self.managedObjectContext;
-//    }
+    }
     
     
     
@@ -44,29 +42,13 @@
     
     [ParseNetworkManager establishConnection];
     
-//    [Parse setApplicationId:@"DDcRvrl0DybiPV3VyTJpTMpvFrOYrUCCTlf5glgX" clientKey:@"31cjkmYUxviwxVh8OO7JTY3Jku3VnMvZ9wnKm51u"];
-    
-    ////    [keychain setObject:(id)kSecAttrAccessibleAlwaysThisDeviceOnly forKey:(id)kSecAttrAccessible];
-    //    NSUUID *oNSUUID = [[UIDevice currentDevice] identifierForVendor];
-    ////    [strApplicationUUID setString:[oNSUUID UUIDString]];
-    //    NSLog(@"UUID: %@",[oNSUUID UUIDString]);
-    
-    
 #pragma mark Find or Create UUID for device
-    //    if (![FDKey])
-    
     //    [[NSUserDefaults standardUserDefaults] setObject:@"" forKey:@"UUID"];
     //    [NSUserDefaults resetStandardUserDefaults]; removeObjectForKey
     //    [[NSUserDefaults standardUserDefaults] synchronize];
     
     // Grab UUID from device
     NSString *UUID = [[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"];
-    
-    // Create a UUID
-//    NSString *CFUUID = nil;
-//    CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
-//    CFUUID = (NSString *)CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuid));
-
     
     if (!UUID) {
         NSLog(@"No UUID");
@@ -84,123 +66,18 @@
     
     #warning @"DEAL WITH OFFLINE!!!"
     
-    
     ParseNetworkManager *parseManager = [[ParseNetworkManager alloc] init];
     [parseManager checkIfUserExists:UUID];
     
-//    if ([parseManager checkIfUserExists:UUID]) {
-//        // Move On. Success
-//        NSLog(@"Request Success");
-//    } else {
-//        NSLog(@"Request Failed... Trying Again");
-//        // Retry
-//        #warning @"DEAL WITH MULTIPLE FAILED TRIES TO SAVE OR FETCH USER."
-//        if (![parseManager checkIfUserExists:UUID])
-//            NSLog(@"*** NETWORK ERROR!!! ***");
-//    }
-    
-    
-//    // Check if user exists. If not, save as new user with device's UUID
-//    PFQuery *checkIfUserExistsQuery = [PFQuery queryWithClassName:@"User"];
-//    [checkIfUserExistsQuery whereKey:@"uuid" equalTo:UUID];
-//    
-//    [checkIfUserExistsQuery findObjectsInBackgroundWithBlock:^(NSArray *users, NSError *error) {
-//        if (!error) {
-//            // User Doe Not Exist
-//            if (users == nil || [users count] == 0) {
-//                PFObject *user = [PFObject objectWithClassName:@"User"];
-//                [user setObject:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"] forKey:@"uuid"];
-//                
-//                [user saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-//                    if (succeeded) {
-//                        NSLog(@"Successfully Saved New User");
-//                        
-//                    } else {
-//                        NSString *networkError= [[error userInfo] objectForKey:@"error"];
-//                        NSLog(@"Error: %@", networkError);
-//                    }
-//                }];
-//            } else {
-//                NSLog(@"USER EXISTS!");
-//            }
-//        }
-//        else {
-//            NSString *networkError = [[error userInfo] objectForKey:@"error"];
-//            NSLog(@"Error: %@", networkError);
-//        }
-//    }];
-    
-//    PFObject *connection = [PFObject objectWithClassName:@"Connection"];
-//    [connection setObject:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"] forKey:@"connection1_id"];
-//    [connection setObject:@"Michael's iPhone 5" forKey:@"connection1_name"];
-//    [connection setObject:@"418201B4-96EA-4BB9-9D12-EC861C09E094" forKey:@"connection2_id"];
-//    [connection setObject:@"Mike's iPhone Sim" forKey:@"connection2_name"];
-//    
-//    [connection saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-//        if (succeeded) {
-//            NSLog(@"Successfully Saved New Connection!");
-//            
-//        } else {
-//            NSString *networkError= [[error userInfo] objectForKey:@"error"];
-//            NSLog(@"Error: %@", networkError);
-//        }
-//    }];
-    
-    
-    
-//        // Reason why I'm setting up Connection user_id to have other users id is because I'm his connection.
-//        // Also because it made for a more efficient process with the server with the back end architecture set up.
-//        PFObject *connection = [PFObject objectWithClassName:@"Connection"];
-//        [connection setObject:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"] forKey:@"user_uuid"];
-//        [connection setObject:@"418201B4-96EA-4BB9-9D12-EC861C09E094" forKey:@"connection_uuid"];
-//        [connection setObject:@"iPhone Sim" forKey:@"connection_name"];
-//    
-//        [connection saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-//            if (succeeded) {
-//                NSLog(@"Successfully Saved New Connection!");
-//    
-//            } else {
-//                NSString *networkError= [[error userInfo] objectForKey:@"error"];
-//                NSLog(@"Error: %@", networkError);
-//            }
-//        }];
-    
-    
-
-    
-    // To Validate that there doesn't already exist an entry
-    
-//    var BusStop = Parse.Object.extend("BusStop");
-//    
-//    // Check if stopId is set, and enforce uniqueness based on the stopId column.
-//    Parse.Cloud.beforeSave("BusStop", function(request, response) {
-//        if (!request.object.get("stopId")) {
-//            response.error('A BusStop must have a stopId.');
-//        } else {
-//            var query = new Parse.Query(BusStop);
-//            query.equalTo("stopId", request.object.get("stopId"));
-//            query.first({
-//            success: function(object) {
-//                if (object) {
-//                    response.error("A BusStop with this stopId already exists.");
-//                } else {
-//                    response.success();
-//                }
-//            },
-//            error: function(error) {
-//                response.error("Could not validate uniqueness for this BusStop object.");
-//            }
-//            });
-//        }
-//    });
-    
-    
-    
-    
+//    [self createConnectionsForTesting];
     
     return YES;
 }
-							
+
+- (void)application:(UIApplication *)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
+    [ParseNetworkManager fetchNewConnectionsWithCompletionHandler:completionHandler];
+}
+
 - (void)applicationWillResignActive:(UIApplication *)application
 {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
@@ -322,6 +199,27 @@
 - (NSURL *)applicationDocumentsDirectory
 {
     return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+}
+
+#pragma mark - Helper Methods For Testing Only
+- (void)createConnectionsForTesting {
+    PFObject *connection = [PFObject objectWithClassName:@"Connection"];
+    [connection setObject:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"] forKey:@"connection1_id"];
+    [connection setObject:@"Mike's iPhone Sim" forKey:@"connection1_name"];
+    [connection setObject:[NSNumber numberWithBool:NO] forKey:@"connection1_has_messages"];
+    [connection setObject:@"4371E73A-15DF-4CA1-998D-10CB6B9B4A2D" forKey:@"connection2_id"];
+    [connection setObject:@"Michael's iPhone 5" forKey:@"connection2_name"];
+    [connection setObject:[NSNumber numberWithBool:NO] forKey:@"connection2_has_messages"];
+
+    [connection saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+        if (succeeded) {
+            NSLog(@"Successfully Saved New Connection!");
+
+        } else {
+            NSString *networkError= [[error userInfo] objectForKey:@"error"];
+            NSLog(@"Error: %@", networkError);
+        }
+    }];
 }
 
 @end

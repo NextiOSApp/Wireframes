@@ -14,6 +14,10 @@
 @property (nonatomic) NSString *connectionName;
 @property (nonatomic) NSString *connectionUUID;
 @property (nonatomic) NSString *connectionId;
+@property (nonatomic) NSString *connectionNumber;
+@property (nonatomic) NSString *myNumber;
+@property (nonatomic) BOOL hasMessages;
+@property (nonatomic) NSInteger rowNumber;
 
 @property (nonatomic) NSArray *messagesArray;
 

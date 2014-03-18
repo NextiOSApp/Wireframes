@@ -10,6 +10,7 @@
 #import "ConnectionData.h"
 #import "ConnectionMessageData.h"
 #import "MBProgressHUD.h"
+#import "RouletteTestingMasterViewController.h"
 
 @implementation ParseNetworkManager
 
@@ -17,52 +18,10 @@
     [Parse setApplicationId:@"DDcRvrl0DybiPV3VyTJpTMpvFrOYrUCCTlf5glgX" clientKey:@"31cjkmYUxviwxVh8OO7JTY3Jku3VnMvZ9wnKm51u"];
 }
 
-- (BOOL)changedList:(NSMutableArray *)newConnections currentList:(NSMutableArray *)oldConnections {
-    // If not the same size, we know we have a new list of connections
-    if ([newConnections count] != [oldConnections count])
-        return YES;
-
-//    for (ConnectionData *connection in newConnections) {
-    for (int i=0; i < [newConnections count]; i++) {
-//        if (![oldConnections containsObject:connection]) {
-//            NSLog(@"DIDN'T FIND NEW CONNECTION IN CACHED LIST *****");
-//            return YES;
-//        }
-        
-        #warning @"SLOWWWWWWW"
-        if (![[[oldConnections objectAtIndex:i] connectionUUID] isEqualToString:[[newConnections objectAtIndex:i] connectionUUID]]) {
-            NSLog(@"DIDN'T FIND NEW CONNECTION IN CACHED LIST. UPDATE *****");
-//            return YES;
-        }
-    }
-    
-    return NO;
-}
-
-- (BOOL)authenticateUser:(NSString *)UUID {
-    #warning @"Make PFQuery so you only have to init once."
-    PFQuery *query = [PFQuery queryWithClassName:@"User"];
-    [query whereKey:@"uuid" equalTo:UUID];
-
-    PFObject *user = [query getFirstObject];
-//    PFObject *user = [PFObject objectWithClassName:@"User"];
-    [user setObject:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"] forKey:@"uuid"];
-    
-    // Same as normal Save except this will cache save query in background if no network connection
-    [user saveEventually:^(BOOL succeeded, NSError *error) {
-        if (succeeded) {
-            NSLog(@"Successfully Saved New User");
-            
-        } else {
-            // S
-            
-            NSString *networkError= [[error userInfo] objectForKey:@"error"];
-            NSLog(@"Error: %@", networkError);
-//            NSLog(@"HOW DID USER GET DELETED?");
-        }
-    }];
-    return YES;
-    
++ (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
+    // Need to either figure out how to grab an instance of that view or could just make a call to cache the new results
+    //    [self getConnections:(RouletteTestingMasterViewController *)]
+    completionHandler(UIBackgroundFetchResultNewData);
 }
 
 - (BOOL)checkIfUserExists:(NSString *)UUID {
@@ -75,18 +34,15 @@
     
     [query findObjectsInBackgroundWithBlock:^(NSArray *users, NSError *error) {
         if (!error) {
-            // User Does Not Exist
             if (users == nil || [users count] == 0) {
                 PFObject *user = [PFObject objectWithClassName:@"User"];
                 [user setObject:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"] forKey:@"uuid"];
-                
-                // Same as normal Save except this will cache save query in background if no network connection
+            
                 [user saveEventually:^(BOOL succeeded, NSError *error) {
                     if (succeeded) {
                         NSLog(@"Successfully Saved New User");
                         
                     } else {
-                        // Failed Saving User. Should raise an alert *****
                         NSString *networkError= [[error userInfo] objectForKey:@"error"];
                         NSLog(@"Error: %@", networkError);
                     }
@@ -105,40 +61,19 @@
     return savedSuccessfully;
 }
 
-//- (NSString*)fetchConnectionObjectId:(NSString *)currentUserUUID currentConnectionUUID:(NSString *)connectionUUID {
-//    PFQuery *query = [PFQuery queryWithClassName:@"Connection"];
-//    [query whereKey:@"user_uuid" equalTo:connectionUUID];
-//    [query whereKey:@"connection_uuid" equalTo:currentUserUUID];
-//    
-//    [query getFirstObjectInBackgroundWithBlock:^(PFObject *object, NSError *error) {
-//        if (!error) {
-//            NSLog(@"Successfully retrieved object!");
-//        } else {
-//            NSLog(@"Failed To Retrieve Object!");
-//        }
-//    }];
-//}
-
 - (void)getConnections:(UIView*)currentView {
-    __block BOOL cacheValueExists = NO;
-    __block BOOL checkedCacheCycle = NO;
+    __block BOOL isCacheCycle = YES;
+    __block NSInteger rowCounter = 0;
     __block NSString *connectionKey = nil;
+    __block NSString *myKey = nil;
     
     NSString *currentUUID = [[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"];
-    
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"connection1_id = %@ OR connection2_id = %@", currentUUID, currentUUID];
     
     PFQuery *getConnectionsList = [PFQuery queryWithClassName:@"Connection" predicate:predicate];
-    
-    // Query Cache Policy checks cache first then network.
-    // Point of this is because cache is quicker but might not be up to date so need to compare with server response
-//    getConnectionsList.cachePolicy = kPFCachePolicyCacheThenNetwork;
-    
-    NSLog(@"Looking for Connections with UUID: %@", currentUUID);
+    getConnectionsList.cachePolicy = kPFCachePolicyCacheThenNetwork;
     
     NSMutableArray *cachedConnectionsListArray = [[NSMutableArray alloc] init];
-    NSMutableArray *networkConnectionsListArray = [[NSMutableArray alloc] init];
-    
     NSMutableArray *messagesListArray = [[NSMutableArray alloc] init];
     
     MBProgressHUD *spinner = [MBProgressHUD showHUDAddedTo:currentView animated:YES];
@@ -146,80 +81,133 @@
     spinner.labelText = @"Uploading";
     [spinner show:YES];
     
-    
     __block BOOL cachedResponseExists = [getConnectionsList hasCachedResult];
     NSLog(@"CACHED RESPONSE??? %@", cachedResponseExists ? @"YES" : @"NO");
     //    [getConnectionsList clearCachedResult];
     
-    
     NSLog(@"ABOUT TO DISPATCH BACKGROUD PROCESS FOR GETTING LIST OF CONNECTIONS *****");
+    
+    // If there is no cached query then we go straight to the network method
+    if (!cachedResponseExists) {
+        isCacheCycle = NO;
+    }
     
     [getConnectionsList findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
         if (!error) {
-            for (PFObject *connectionResponse in objects) {
-                ConnectionData *connection = [[ConnectionData alloc] init];
+            rowCounter = 0;
+            if (isCacheCycle) {
+                isCacheCycle = NO;
                 
-                if ([currentUUID isEqualToString:[connectionResponse objectForKey:@"connection1_id"]]) {
-                    connectionKey = @"connection2";
-                } else {
-                    connectionKey = @"connection1";
-                }
-                
-                connection.connectionUUID = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_id", connectionKey]];
-                connection.connectionName = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_name", connectionKey]];
-                connection.connectionId = [connectionResponse objectId];
-                
-                
-                
-                
-                PFQuery *getMessages = [PFQuery queryWithClassName:@"ConnectionMessage"];
-                
-                [getMessages whereKey:@"connection_id" equalTo:[connectionResponse objectId]];
-                [getMessages whereKey:@"message_for" equalTo:currentUUID];
-                
-                UIImage *messageImage = [[UIImage alloc] init];
-                
-                NSArray *messageArray = [[NSArray alloc] initWithArray:[getMessages findObjects]];
-                for (PFObject *connectionMessage in messageArray) {
-                    PFFile *imageFile = [connectionResponse objectForKey:@"image_message"];
+                for (PFObject *connectionResponse in objects) {
+                    ConnectionData *connection = [[ConnectionData alloc] init];
                     
-                    ConnectionMessageData *message = [[ConnectionMessageData alloc] init];
-                    message.imageMessage = [UIImage imageWithData:[imageFile getData]];
-                    message.messageId = [connectionMessage objectId];
+                    if ([currentUUID isEqualToString:[connectionResponse objectForKey:@"connection1_id"]]) {
+                        connectionKey = @"connection2";
+                        myKey = @"connection1";
+                    } else {
+                        connectionKey = @"connection1";
+                        myKey = @"connection2";
+                    }
                     
-                    [messagesListArray addObject:message];
+                    connection.connectionUUID = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_id", connectionKey]];
+                    connection.connectionName = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_name", connectionKey]];
+                    connection.connectionId = [connectionResponse objectId];
+                    connection.connectionNumber = connectionKey;
+                    connection.myNumber = myKey;
+                    connection.hasMessages = [[connectionResponse objectForKey:[NSString stringWithFormat:@"%@_has_messages", myKey]] boolValue];
+                    connection.rowNumber = rowCounter;
+                    
+                    PFQuery *getMessages = [PFQuery queryWithClassName:@"ConnectionMessage"];
+                    getMessages.cachePolicy = kPFCachePolicyCacheOnly;
+                    [getMessages whereKey:@"connection_id" equalTo:[connectionResponse objectId]];
+                    [getMessages whereKey:@"message_for" equalTo:currentUUID];
+                    
+                    NSArray *messageArray = [[NSArray alloc] initWithArray:[getMessages findObjects]];
+                    for (PFObject *connectionMessage in messageArray) {
+                        ConnectionMessageData *message = [[ConnectionMessageData alloc] init];
+                        PFFile *imageFile = [connectionMessage objectForKey:@"image_message"];
+                        if (imageFile) {
+                            message.imageMessage = [UIImage imageWithData:[imageFile getData]];
+                        } else {
+                            imageFile = [connectionMessage objectForKey:@"image_message"];
+                        }
+                        
+                        message.messageId = [connectionMessage objectId];
+                        [messagesListArray addObject:message];
+                    }
+                    
+                    connection.messagesArray = messagesListArray;
+                    [cachedConnectionsListArray addObject:connection];
                 }
+                rowCounter++;
+
+                if ([self.delegate respondsToSelector:@selector(updateConnections:)])
+                    [self.delegate updateConnections:cachedConnectionsListArray];
                 
-//                [getMessages findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
-//                    if (!error) {
-//                        for (PFObject *connectionMessage in objects) {
-//                            ConnectionMessageData *message = [[ConnectionMessageData alloc] init];
-//                            
-//                            message.imageMessage = [connectionMessage objectForKey:@"imageMessage"];
-//                            message.messageId = [connectionMessage objectId];
-//                            
-//                            [messagesListArray addObject:message];
-//                            
-//                            [NSKeyedArchiver archiveRootObject:messagesListArray
-//                                                        toFile:[NSTemporaryDirectory() stringByAppendingPathComponent:@"Messages.cache"]];
-//                            
-//                            if ([self.delegate respondsToSelector:@selector(updateConnections:)])
-//                                [self.delegate updateConnectionMessages:messagesListArray];
-//                        }
-//                        
-//                    } else {
-//                        NSLog(@"ERROR!! *****");
-//                    }
-//
-//                }];
-                
-                connection.messagesArray = messagesListArray;
-                [cachedConnectionsListArray addObject:connection];
             }
-//            [NSKeyedArchiver archiveRootObject:cachedConnectionsListArray
-//                                        toFile:[NSTemporaryDirectory() stringByAppendingPathComponent:@"Connections.cache"]];
-            if ([self.delegate respondsToSelector:@selector(updateConnections:)])
-                [self.delegate updateConnections:cachedConnectionsListArray];
+            else {
+                [cachedConnectionsListArray removeAllObjects];
+                
+                for (PFObject *connectionResponse in objects) {
+                    ConnectionData *connection = [[ConnectionData alloc] init];
+                    
+                    if ([currentUUID isEqualToString:[connectionResponse objectForKey:@"connection1_id"]]) {
+                        connectionKey = @"connection2";
+                        myKey = @"connection1";
+                    } else {
+                        connectionKey = @"connection1";
+                        myKey = @"connection2";
+                    }
+                    
+                    connection.connectionUUID = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_id", connectionKey]];
+                    connection.connectionName = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_name", connectionKey]];
+                    connection.connectionId = [connectionResponse objectId];
+                    connection.connectionNumber = connectionKey;
+                    connection.myNumber = myKey;
+                    connection.hasMessages = [[connectionResponse objectForKey:[NSString stringWithFormat:@"%@_has_messages", myKey]] boolValue];
+                    connection.rowNumber = rowCounter;
+                    
+                    // No reason to fetch messages if there are no messages for the connection
+                    if (connection.hasMessages) {
+                        PFQuery *getMessages = [PFQuery queryWithClassName:@"ConnectionMessage"];
+                        getMessages.cachePolicy = kPFCachePolicyNetworkOnly;
+                        
+                        [getMessages whereKey:@"connection_id" equalTo:[connectionResponse objectId]];
+                        [getMessages whereKey:@"message_for" equalTo:currentUUID];
+                        
+                        [getMessages findObjectsInBackgroundWithBlock:^(NSArray *messageArray, NSError *error) {
+                            if (!error) {
+                                for (PFObject *connectionMessage in messageArray) {
+                                    PFFile *imageFile = [connectionMessage objectForKey:@"image_message"];
+                                    
+                                    ConnectionMessageData *message = [[ConnectionMessageData alloc] init];
+                                    message.imageMessage = [UIImage imageWithData:[imageFile getData]];
+                                    message.messageId = [connectionMessage objectId];
+                                    
+                                    [messagesListArray addObject:message];
+                                }
+                                
+                                connection.messagesArray = messagesListArray;
+                                
+                                if ([self.delegate respondsToSelector:@selector(updateConnection:)])
+                                    [self.delegate updateConnection:connection];
+                            }
+                            else {
+                                NSLog(@"ERRORRRR *****");
+                            }
+                        }];
+                        
+                    }
+                    
+                    connection.messagesArray = messagesListArray;
+                    [cachedConnectionsListArray addObject:connection];
+                    
+                }
+                rowCounter++;
+
+                if ([self.delegate respondsToSelector:@selector(updateConnections:)])
+                    [self.delegate updateConnections:cachedConnectionsListArray];
+            }
         }
     }];
     [spinner hide:YES];
@@ -228,7 +216,7 @@
 
 
 
-
+#warning @"IGNORE FOR NOW. NOT USING THIS AT THE MOMENT BUT THIS HAS ELEMENTS OF A DIFFERENT CACHING METHOD WE MAY WANT TO USE."
 // WE SHOULD PULL CACHE AND MAKE QUERY IN BACKGROUND AND THEN COMPARE RESULTS TO SEE IF WE NEED TO UPDATE
 - (void)fetchConnectionsList:(UIView*)currentView {
     __block BOOL cacheValueExists = NO;
@@ -450,31 +438,10 @@
 //    return connectionsListArray;
 }
 
-- (void)uploadImageMessage:(NSData*)imageData parseConnectionObject:(NSString*)objectId {
-    PFFile *imageFile = [PFFile fileWithName:@"image.jpg" data:imageData];
-    
-    NSLog(@"SAVING NEW IMAGE IN BACKGROUND *****");
-    [imageFile saveInBackground];
-    
-    PFObject *currentConnection = [PFObject objectWithoutDataWithClassName:@"Connection" objectId:objectId];
-    [currentConnection setValue:imageFile forKey:@"image_message"];
-    
-    NSLog(@"SENDING IMAGE MESSAGE TO CONNECTION IN BACKGROUND ***** ");
-    [currentConnection saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-        if (!error) {
-            NSLog(@"Successfully Updated!");
-        } else {
-            NSLog(@"Error Updating Entry: %@ %@", error, [error userInfo]);
-        }
-    }];
-}
-
 - (BOOL)uploadMessage:(NSData *)imageData connection:(ConnectionData *)currentConnection forView:(UIView*)currentView {
     __block BOOL uploadSuccess = YES;
     
-    // Create Parse Image File
     PFFile *imageFile = [PFFile fileWithName:@"image.jpg" data:imageData];
-    [imageFile saveInBackground];
     
     MBProgressHUD *spinner = [MBProgressHUD showHUDAddedTo:currentView animated:YES];
     spinner.mode = MBProgressHUDModeIndeterminate;
@@ -489,48 +456,24 @@
     [newMessage saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
         if (!error) {
             NSLog(@"SUCCESSFULLY SENT MESSAGE TO %@, TIED TO CONNECTION ID: %@", currentConnection.connectionName, currentConnection.connectionId);
+            
+            // Update Boolean value on Connection object if there are currently no messages
+            // Point of this is to help determine when we need to actually query the ConnectionMessage table in getConnections call
+            if (!currentConnection.hasMessages) {
+                PFQuery *getCurrentConnection = [PFQuery queryWithClassName:@"Connection"];
+                
+                [getCurrentConnection getObjectInBackgroundWithId:currentConnection.connectionId block:^(PFObject *object, NSError *error) {
+                    
+                    [object setObject:[NSNumber numberWithBool:YES] forKey:[NSString stringWithFormat:@"%@_has_messages", currentConnection.connectionNumber]];
+                    
+                    [object saveInBackground];
+                }];
+            }
+
         } else {
             NSLog(@"Error Updating Entry: %@ %@", error, [error userInfo]);
         }
     }];
-    
-    
-    
-    
-    
-    
-    
-//    PFQuery *query = [PFQuery queryWithClassName:@"ConnectionMessage"];
-////    [query whereKey:@"user_uuid" equalTo:currentConnectionUUID];
-//    
-//    #warning @"Store current user uuid in delegate for global use."
-//    // Maybe can globally keep currentUserUUID
-////    [query whereKey:@"connection_uuid" equalTo:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"]];
-//    
-//    // Can probably combine this with the whole thing
-//    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
-//        if (!error) {
-//            PFObject *foundConnection = [objects objectAtIndex:0];
-//            
-//            if (foundConnection != nil) {
-//                [foundConnection setValue:imageFile forKey:@"image_message"];
-//                
-//                [foundConnection saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-//                    if (!error) {
-//                        NSLog(@"Successfully Updated!");
-//                    } else {
-//                        uploadSuccess = NO;
-//                        NSLog(@"Error Updating Entry: %@ %@", error, [error userInfo]);
-//                    }
-//                }];
-//            }
-//            
-//        }
-//        else {
-//            uploadSuccess = NO;
-//            NSLog(@"Error Finding Entry: %@ %@", error, [error userInfo]);
-//        }
-//    }];
     
     [spinner hide:YES];
     return uploadSuccess;
@@ -539,88 +482,23 @@
 - (BOOL)uploadVideoMessage:(NSData *)imageData recieverUUID:(NSString *)currentConnectionUUID forView:(UIView*)currentView {
     __block BOOL uploadSuccess = YES;
     
-    // Create Parse Image File
-    PFFile *imageFile = [PFFile fileWithName:@"Image.jpg" data:imageData];
-    
-    MBProgressHUD *spinner = [MBProgressHUD showHUDAddedTo:currentView animated:YES];
-    spinner.mode = MBProgressHUDModeIndeterminate;
-    spinner.labelText = @"Uploading";
-    [spinner show:YES];
-    
-#warning @"Can we combine save in background for PFFile and PFObject? Seems Redundant."
-    // Try to Save Image
-    [imageFile saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-        if (!error) {
-            // Set Table Name and Params To Query
-            PFObject *userVideo = [PFObject objectWithClassName:@"Connection"];
-            [userVideo setObject:imageFile forKey:@"video_message"];
-            
-            // Save Image To Parse
-            [userVideo saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                if (!error) {
-                    NSLog(@"Image Saved Successfully!");
-                    
-                    PFQuery *query = [PFQuery queryWithClassName:@"Connection"];
-                    [query whereKey:@"user_uuid" equalTo:currentConnectionUUID];
-                    
-#warning @"Store current user uuid in delegate for global use."
-                    // Maybe can globally keep currentUserUUID
-                    [query whereKey:@"connection_uuid" equalTo:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"]];
-                    
-                    // Can probably combine this with the whole thing
-                    // Update the returned Connection object with { has_pending_connection: YES }
-                    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
-                        if (!error) {
-                            PFObject *foundConnection = [objects objectAtIndex:0];
-                            
-                            // Parse BOOL columns use numbers for values
-                            [foundConnection setValue:userVideo forKey:@"video_message"];
-                            
-                            [foundConnection saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                                if (!error) {
-                                    NSLog(@"Successfully Updated!");
-                                } else {
-                                    uploadSuccess = NO;
-                                    NSLog(@"Error Updating Entry: %@ %@", error, [error userInfo]);
-                                }
-                            }];
-                            
-                        }
-                        else {
-                            uploadSuccess = NO;
-                            NSLog(@"Error Finding Entry: %@ %@", error, [error userInfo]);
-                        }
-                    }];
-                    //                        PFObject *object = [query get];
-                    //                        [query setValue:[NSNumber numberWithBool:YES] forKey:@"has_pending_connection"];
-                }
-                else {
-                    uploadSuccess = NO;
-                    NSLog(@"Error: %@ %@", error, [error userInfo]);
-                }
-            }];
-        }
-        else {
-            uploadSuccess = NO;
-            NSLog(@"Error: %@ %@", error, [error userInfo]);
-        }
-    }];
-    
-    [spinner hide:YES];
     return uploadSuccess;
 }
 
-- (void)deleteImageMessage:(NSString*)connection_uuid {
+- (void)deleteImageMessage:(NSString*)message_id {
     #warning @"Store Object ID From Results To Make Query More Eficient."
     
-    PFQuery *query = [PFQuery queryWithClassName:@"Connection"];
-    [query whereKey:@"connection_uuid" equalTo:connection_uuid];
-    [query whereKey:@"user_uuid" equalTo:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"]];
+    PFQuery *query = [PFQuery queryWithClassName:@"ConnectionMessage"];
     
-    [query getFirstObjectInBackgroundWithBlock:^(PFObject *object, NSError *error) {
+    [query getObjectInBackgroundWithId:message_id block:^(PFObject *object, NSError *error) {
         if (!error) {
-            [object removeObjectForKey:@"image_message"];
-            [object saveInBackground];
+            [object deleteInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
+                if (!error) {
+                    NSLog(@"SUCCESSFULLY DELETED MESSAGE");
+                } else {
+                    NSLog(@"Error Deleting Entry: %@ %@", error, [error userInfo]);
+                }
+            }];
         } else {
             NSLog(@"Error Finding Entry: %@ %@", error, [error userInfo]);
         }

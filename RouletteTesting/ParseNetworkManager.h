@@ -10,34 +10,26 @@
 #import <Parse/Parse.h>
 #import "ConnectionData.h"
 
-// Make part of singleton class!
-
 @protocol ParseManagerProtocol <NSObject>
 @required
 - (void)updateConnections:(NSMutableArray*)cachedConnectionList;
-- (void)updateConnectionMessages:(NSMutableArray *)messageList;
-//- (void)loadCachedConnectionList:(NSMutableArray*)cachedConnectionList;
-//- (void)dataRetrieved:(NSMutableArray*)cachedConnectionList;
+- (void)updateConnection:(ConnectionData*)connection;
 @end
 
 
 @interface ParseNetworkManager : NSObject {
-//    id<ParseManagerProtocol> delegate;
 }
 
 + (void)establishConnection;
 
-- (BOOL)changedList:(NSMutableArray *)newConnections currentList:(NSMutableArray *)oldConnections;
++ (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler;
 
 - (BOOL)checkIfUserExists:(NSString*)UUID;
-- (BOOL)authenticateUser:(NSString*)UUID;
 
 - (void)fetchConnectionsList:(UIView*)currentView;
 - (void)getConnections:(UIView*)currentView;
-- (NSString*)fetchConnectionObjectId:(NSString*)currentUserUUID currentConnectionUUID:(NSString*)connectionUUID;
 
 - (BOOL)uploadMessage:(NSData*)imageData connection:(ConnectionData *)currentConnection forView:(UIView*)currentView;
-- (void)uploadImageMessage:(NSData*)imageData parseConnectionObject:(NSString*)objectId;
 - (BOOL)uploadVideoMessage:(NSData*)imageData recieverUUID:(NSString*)currentConnectionUUID forView:(UIView*)currentView;
 
 - (void)deleteImageMessage:(NSString*)connection_uuid;

@@ -11,47 +11,29 @@
 #import "ConnectionData.h"
 #import <MobileCoreServices/MobileCoreServices.h>
 #import "ParseNetworkManager.h"
-
-//@class ParseNetworkManager;
-//@class RouletteTestingDetailViewController;
-
 #import <CoreData/CoreData.h>
 
 @interface RouletteTestingMasterViewController : UIViewController <NSFetchedResultsControllerDelegate, UITableViewDataSource, UITableViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ParseManagerProtocol, UIGestureRecognizerDelegate>
 
-//@property (strong, nonatomic) RouletteTestingDetailViewController *detailViewController;
+-(UIImagePickerController *)imagePicker;
 
 @property (strong, nonatomic) NSFetchedResultsController *fetchedResultsController;
 @property (strong, nonatomic) NSManagedObjectContext *managedObjectContext;
 
-// Camera View
 @property (nonatomic) UIImagePickerController *imagePicker;
+@property (nonatomic) UIRefreshControl *refreshControl;
 
--(UIImagePickerController *)imagePicker;
-
-// Keep Current Connection Context
 @property (nonatomic) ConnectionData *currentConnection;
+@property (nonatomic) ParseNetworkManager *parseManager;
 
-// List of connections. Use Connection Model? Or too small?
 @property (strong, nonatomic) NSMutableArray *connectionsListArray;
 @property (strong, nonatomic) NSMutableArray *messagesListArray;
 
-// Need to know who you are sending message too
 @property (nonatomic) NSString *currentConnectionUUID;
-
-//@property (nonatomic) ParseNetworkManager *parseManager;
-@property (nonatomic) ParseNetworkManager *parseManager;
-
 @property (nonatomic) NSIndexPath *currentRow;
 
-@property (nonatomic) UIRefreshControl *refreshControl;
-
 @property (nonatomic) IBOutlet UILabel *connectionName;
-
 @property (nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic) IBOutlet UIImageView *imageMessageView;
-//@property (nonatomic) IBOutlet UITapGestureRecognizer *tapGesture;
-
-
 
 @end
