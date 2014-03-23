@@ -15,6 +15,8 @@
 
 @interface RouletteTestingMasterViewController : UIViewController <NSFetchedResultsControllerDelegate, UITableViewDataSource, UITableViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ParseManagerProtocol, UIGestureRecognizerDelegate>
 
+- (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler;
+
 -(UIImagePickerController *)imagePicker;
 
 @property (strong, nonatomic) NSFetchedResultsController *fetchedResultsController;

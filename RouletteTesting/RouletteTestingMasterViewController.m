@@ -7,6 +7,7 @@
 //
 
 #import "RouletteTestingMasterViewController.h"
+#import "ConnectionCell.h"
 
 static NSString * const KeychainItem_Service = @"FDKeychain";
 
@@ -52,8 +53,31 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     
     parseManager = [[ParseNetworkManager alloc] init];
     parseManager.delegate = self;
+    
+    NSFileManager *fileMgr = [NSFileManager defaultManager];
+    
+    // Get documetns directory
+    NSArray *dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *docsDir = dirPaths[0];
+    
+    // Build path to data file
+    NSString *dataFilePath = [[NSString alloc] initWithString:[docsDir stringByAppendingPathComponent:@"data.archive"]];
+    
+    // Check if the file already exists
+    if ([fileMgr fileExistsAtPath:dataFilePath]) {
+        connectionsListArray = [NSKeyedUnarchiver unarchiveObjectWithFile:dataFilePath];
+    }
 
-    [parseManager getConnections:self.view];
+
+//    [parseManager getConnections:self.view];
+    [parseManager getConnections1:self.view];
+}
+
+- (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
+    [parseManager getConnections1:self.view];
+    
+    UIBackgroundFetchResult result = UIBackgroundFetchResultNewData;
+    completionHandler(result);
 }
 
 - (void)refresh {
@@ -114,23 +138,27 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
+    NSLog(@"%d", [connectionsListArray count]);
     return [connectionsListArray count];
 }
 
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+- (ConnectionCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ConnectionCell" forIndexPath:indexPath];
+    ConnectionCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ConnectionCell" forIndexPath:indexPath];
     
     if ([connectionsListArray count] <= indexPath.row)
         return cell;
     
     currentConnection = [connectionsListArray objectAtIndex:indexPath.row];
-    cell.textLabel.text = currentConnection.connectionName;
+    cell.connectionNameLabel.text = currentConnection.connectionName;
+    cell.connectionId = currentConnection.connectionId;
     
     if ([currentConnection.messagesArray count] > 0) {
         cell.backgroundColor = [UIColor greenColor];
+        cell.messageCountLabel.text = [NSString stringWithFormat:@"%d Messages", [currentConnection.messagesArray count]];
     } else {
         cell.backgroundColor = [UIColor whiteColor];
+        cell.messageCountLabel.text = @"0 Messages";
     }
     
     return cell;
@@ -309,6 +337,62 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
 
 #pragma mark Parse Manager delegate methods
 
+// Append To Cached Core Data Table
+-(void)updateMessages:(NSMutableArray *)messages {
+    // Update Any Rows that match the ID of the connectionID the messages array returns
+//    NSArray *a = [self.tableView indexPathsForVisibleRows];
+//    ConnectionCell *cell = [self.tableView cellForRowAtIndexPath:[a firstObject]];
+    
+    NSFileManager *fileMgr;
+    NSString *docsDir;
+    NSArray *dirPaths;
+    
+    fileMgr = [NSFileManager defaultManager];
+    
+    // Get documetns directory
+    dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    docsDir = dirPaths[0];
+    
+    // Build path to data file
+    NSString *dataFilePath = [[NSString alloc] initWithString:[docsDir stringByAppendingPathComponent:@"data.archive"]];
+    
+    // Check if the file already exists
+//    if ([fileMgr fileExistsAtPath:dataFilePath]) {
+//        NSMutableArray *dataArray;
+//    
+//        dataArray = [NSKeyedUnarchiver unarchiveObjectWithFile:dataFilePath];
+//    }
+    
+    // Get cached Messaged IDs to append new ones
+    NSMutableArray *cachedMessagesIds = [NSMutableArray arrayWithArray:[[NSUserDefaults standardUserDefaults] objectForKey:@"messageIdsArray"]];
+    
+    NSMutableArray *cachedConnections = [NSKeyedUnarchiver unarchiveObjectWithFile:dataFilePath];
+    int counter = 0;
+    for (ConnectionData *connection in cachedConnections) {
+        for (ConnectionMessageData *message in messages) {
+            if ([message.connectionId isEqualToString:connection.connectionId]) {
+                [[cachedConnections objectAtIndex:counter] setMessagesArray:[NSMutableArray arrayWithObject:message]];
+                [connection.messagesArray arrayByAddingObject:message];
+            }
+            [cachedMessagesIds addObject:message.messageId];
+        }
+    }
+    
+    // Save new list of cached Message IDs
+    [[NSUserDefaults standardUserDefaults] setObject:cachedMessagesIds forKey:@"messageIdsArray"];
+    
+    connectionsListArray = cachedConnections;
+    NSMutableArray *arr = [[NSMutableArray alloc] initWithArray:connectionsListArray];
+//    NSError *error;
+//    BOOL success = [[NSFileManager defaultManager] removeItemAtPath:dataFilePath error:&error];
+    // Re-save new list
+    [NSKeyedArchiver archiveRootObject:arr toFile:dataFilePath];
+    
+    [self.tableView reloadData];
+    [self.refreshControl endRefreshing];
+}
+
+
 - (void)updateConnections:(NSMutableArray *)cachedConnectionList {
     self.connectionsListArray = cachedConnectionList;
     [self.tableView reloadData];
@@ -317,7 +401,7 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
 
 - (void)updateConnection:(ConnectionData *)connection {
     NSIndexPath *number = [NSIndexPath indexPathForRow:connection.rowNumber inSection:0];
-    [self.tableView reloadRowsAtIndexPaths:@[number] withRowAnimation:UITableViewRowAnimationNone];
+    [self.tableView reloadRowsAtIndexPaths:@[number] withRowAnimation:UITableViewRowAnimationFade];
 }
 
 #pragma mark - Fetched results controller

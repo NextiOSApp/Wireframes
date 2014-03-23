@@ -13,5 +13,6 @@
 @property (nonatomic) IBOutlet UILabel *connectionsLabel;
 
 - (IBAction)connView:(id)sender;
+- (void)newConnection;
 
 @end

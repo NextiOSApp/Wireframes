@@ -75,7 +75,16 @@
 }
 
 - (void)application:(UIApplication *)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
-    [ParseNetworkManager fetchNewConnectionsWithCompletionHandler:completionHandler];
+    
+    // Will help with 2 things:
+    // 1. Find Deleted Connections Because server count would be different than current. *** Possible that someone deleted you but you re-add so you have same count
+    // 2. Compare Updated At of local list with server.
+    //      MAKING AN UPDATE TO THE MESSAGES WILL ALSO MAKE A CALL TO UPDATE THE CONNECTIONS TABLE.
+    //      I WOULD WANT TO TAKE CURRENT TIME, UPDATE MY LOCAL OBJECT WITH THAT TIME AND UPDATE UPDATED_AT ON CONNECTIONS OBJECT    WITH TIME
+    RouletteTestingMasterViewController *connectionsVC = (RouletteTestingMasterViewController*)self.window.rootViewController;
+    NSLog(@"Root View is: %@", connectionsVC.class);
+    
+    [connectionsVC fetchNewConnectionsWithCompletionHandler:completionHandler];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application

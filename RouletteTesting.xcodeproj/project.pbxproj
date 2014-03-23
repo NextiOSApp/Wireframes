@@ -37,6 +37,7 @@
 		7746188C18A8D7C9000484F5 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7746188B18A8D7C9000484F5 /* StoreKit.framework */; };
 		7746188E18A8D7D0000484F5 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7746188D18A8D7D0000484F5 /* Security.framework */; };
 		7746189018A8D7D7000484F5 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7746188F18A8D7D7000484F5 /* SystemConfiguration.framework */; };
+		77A7D80218DD5BEC0097B103 /* ConnectionCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 77A7D80118DD5BEC0097B103 /* ConnectionCell.m */; };
 		77D472D418BDEACB00254AAB /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 77D472D318BDEACB00254AAB /* VideoViewController.m */; };
 		77D472DC18BDEE6400254AAB /* NSString+FontAwesome.m in Sources */ = {isa = PBXBuildFile; fileRef = 77D472DB18BDEE6400254AAB /* NSString+FontAwesome.m */; };
 		77D472DD18BDEE8300254AAB /* fontawesome-webfont.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 77D472D718BDED5600254AAB /* fontawesome-webfont.ttf */; };
@@ -99,6 +100,8 @@
 		7746188B18A8D7C9000484F5 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		7746188D18A8D7D0000484F5 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		7746188F18A8D7D7000484F5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		77A7D80018DD5BEC0097B103 /* ConnectionCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConnectionCell.h; path = ../ConnectionCell.h; sourceTree = "<group>"; };
+		77A7D80118DD5BEC0097B103 /* ConnectionCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ConnectionCell.m; path = ../ConnectionCell.m; sourceTree = "<group>"; };
 		77D472D218BDEACB00254AAB /* VideoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
 		77D472D318BDEACB00254AAB /* VideoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
 		77D472D718BDED5600254AAB /* fontawesome-webfont.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fontawesome-webfont.ttf"; sourceTree = "<group>"; };
@@ -204,6 +207,8 @@
 			isa = PBXGroup;
 			children = (
 				77F2D61B18C5A9C400D36D74 /* Assets */,
+				77A7D80018DD5BEC0097B103 /* ConnectionCell.h */,
+				77A7D80118DD5BEC0097B103 /* ConnectionCell.m */,
 				7746187818A8CCBA000484F5 /* ConnectionData.h */,
 				7746187918A8CCBA000484F5 /* ConnectionData.m */,
 				77F2D61818C5A37200D36D74 /* ConnectionGalleryCell.h */,
@@ -393,6 +398,7 @@
 				77F2D61A18C5A37200D36D74 /* ConnectionGalleryCell.m in Sources */,
 				7746185418A6E2CC000484F5 /* RouletteTestingMasterViewController.m in Sources */,
 				7746185718A6E2CC000484F5 /* RouletteTestingDetailViewController.m in Sources */,
+				77A7D80218DD5BEC0097B103 /* ConnectionCell.m in Sources */,
 				77F2D60C18BF1C3500D36D74 /* MBProgressHUD.m in Sources */,
 				77F2D60918BF052900D36D74 /* ParseNetworkManager.m in Sources */,
 				77F2D60618BEFC0900D36D74 /* ConnectionsViewController.m in Sources */,

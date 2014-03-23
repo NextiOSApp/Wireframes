@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface ConnectionMessageData : NSObject
+@interface ConnectionMessageData : NSObject <NSCoding>
 
 @property (nonatomic) UIImage *imageMessage;
 @property (nonatomic) UIImage *videoMessage;

@@ -18,11 +18,11 @@
     [Parse setApplicationId:@"DDcRvrl0DybiPV3VyTJpTMpvFrOYrUCCTlf5glgX" clientKey:@"31cjkmYUxviwxVh8OO7JTY3Jku3VnMvZ9wnKm51u"];
 }
 
-+ (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
-    // Need to either figure out how to grab an instance of that view or could just make a call to cache the new results
-    //    [self getConnections:(RouletteTestingMasterViewController *)]
-    completionHandler(UIBackgroundFetchResultNewData);
-}
+//+ (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
+//    // Need to either figure out how to grab an instance of that view or could just make a call to cache the new results
+//    //    [self getConnections:(RouletteTestingMasterViewController *)]
+//    completionHandler(UIBackgroundFetchResultNewData);
+//}
 
 - (BOOL)checkIfUserExists:(NSString *)UUID {
     __block BOOL savedSuccessfully = YES;
@@ -60,6 +60,239 @@
     
     return savedSuccessfully;
 }
+
+
+// I'm assuming the Connections Table won't ever change and you will always have a <= count of message object locally
+- (void)getConnections1:(UIView*)currentView {
+    NSString *uuid = [[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"];
+    
+    // Query Message Table With me as the for UUID
+    PFQuery *getMessageIds = [PFQuery queryWithClassName:@"ConnectionMessage"];
+    [getMessageIds whereKey:@"message_for" equalTo:uuid];
+    
+    [getMessageIds findObjectsInBackgroundWithBlock:^(NSArray *messageIds, NSError *error) {
+        if (!error) {
+            NSMutableArray *foundMessageIds = [[NSMutableArray alloc] init];
+            NSMutableArray *messageConnectionIds = [[NSMutableArray alloc] init];
+            
+            for (PFObject *messageId in messageIds) {
+                [foundMessageIds addObject:[messageId objectId]];
+                [messageConnectionIds addObject:[messageId objectForKey:@"connection_id"]];
+            }
+            
+            // Compare found IDs with Cached IDs. If the intersection of the 2 arrays is 0 then no change. Else Fetch those Messages
+            NSMutableArray *cachedMessagesIds = [NSMutableArray arrayWithArray:[[NSUserDefaults standardUserDefaults] objectForKey:@"messageIdsArray"]];
+            
+            [foundMessageIds removeObjectsInArray:cachedMessagesIds];
+            
+            // If there are IDs then fetch those messages. They are new messages
+            if ([foundMessageIds count] > 0) {
+                PFQuery *getNewMessages = [PFQuery queryWithClassName:@"ConnectionMessage"];
+                [getNewMessages whereKey:@"objectId" notContainedIn:cachedMessagesIds];
+                
+                [getNewMessages findObjectsInBackgroundWithBlock:^(NSArray *messages, NSError *error) {
+                    if (!error) {
+                        NSMutableArray *messagesListArray = [[NSMutableArray alloc] init];
+                        for (PFObject *messageObject in messages) {
+                            PFFile *imageFile = [messageObject objectForKey:@"image_message"];
+                            
+                            ConnectionMessageData *connectionMessage = [[ConnectionMessageData alloc] init];
+                            connectionMessage.imageMessage = [UIImage imageWithData:[imageFile getData]];
+                            connectionMessage.messageId = [messageObject objectId];
+                            connectionMessage.connectionId = [messageObject valueForKey:@"connection_id"];
+                            
+                            [messagesListArray addObject:connectionMessage];
+                        }
+                        
+                        // Update View With New Messages
+                        if ([self.delegate respondsToSelector:@selector(updateMessages:)])
+                            [self.delegate updateMessages:messagesListArray];
+                    }
+                    else {
+                        NSLog(@"ERROR RETRIEVING THOSE OBJECTS");
+                    }
+                }];
+            }
+            
+        }
+        else {
+            NSLog(@"ERROR FETCHING OBJECTS *****");
+        }
+        
+    }];
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+//    __block BOOL isCacheCycle = YES;
+//    __block NSInteger rowCounter = 0;
+//    __block NSString *connectionKey = nil;
+//    __block NSString *myKey = nil;
+//    
+//    NSString *currentUUID = [[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"];
+//    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"connection1_id = %@ OR connection2_id = %@", currentUUID, currentUUID];
+//    
+//    PFQuery *getConnectionsList = [PFQuery queryWithClassName:@"Connection" predicate:predicate];
+//    getConnectionsList.cachePolicy = kPFCachePolicyCacheThenNetwork;
+//    
+//    NSMutableArray *cachedConnectionsListArray = [[NSMutableArray alloc] init];
+//    NSMutableArray *messagesListArray = [[NSMutableArray alloc] init];
+//    
+//    MBProgressHUD *spinner = [MBProgressHUD showHUDAddedTo:currentView animated:YES];
+//    spinner.mode = MBProgressHUDModeIndeterminate;
+//    spinner.labelText = @"Uploading";
+//    [spinner show:YES];
+//    
+//    __block BOOL cachedResponseExists = [getConnectionsList hasCachedResult];
+//    NSLog(@"CACHED RESPONSE??? %@", cachedResponseExists ? @"YES" : @"NO");
+//    //    [getConnectionsList clearCachedResult];
+//    
+//    NSLog(@"ABOUT TO DISPATCH BACKGROUD PROCESS FOR GETTING LIST OF CONNECTIONS *****");
+//    
+//    // If there is no cached query then we go straight to the network method
+//    if (!cachedResponseExists) {
+//        isCacheCycle = NO;
+//    }
+//    
+//    [getConnectionsList findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
+//        if (!error) {
+//            rowCounter = 0;
+//            if (isCacheCycle) {
+//                isCacheCycle = NO;
+//                
+//                for (PFObject *connectionResponse in objects) {
+//                    ConnectionData *connection = [[ConnectionData alloc] init];
+//                    
+//                    if ([currentUUID isEqualToString:[connectionResponse objectForKey:@"connection1_id"]]) {
+//                        connectionKey = @"connection2";
+//                        myKey = @"connection1";
+//                    } else {
+//                        connectionKey = @"connection1";
+//                        myKey = @"connection2";
+//                    }
+//                    
+//                    connection.connectionUUID = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_id", connectionKey]];
+//                    connection.connectionName = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_name", connectionKey]];
+//                    connection.connectionId = [connectionResponse objectId];
+//                    connection.connectionNumber = connectionKey;
+//                    connection.myNumber = myKey;
+//                    connection.hasMessages = [[connectionResponse objectForKey:[NSString stringWithFormat:@"%@_has_messages", myKey]] boolValue];
+//                    connection.rowNumber = rowCounter;
+//                    
+//                    PFQuery *getMessages = [PFQuery queryWithClassName:@"ConnectionMessage"];
+//                    getMessages.cachePolicy = kPFCachePolicyCacheOnly;
+//                    [getMessages whereKey:@"connection_id" equalTo:[connectionResponse objectId]];
+//                    [getMessages whereKey:@"message_for" equalTo:currentUUID];
+//                    
+//                    NSArray *messageArray = [[NSArray alloc] initWithArray:[getMessages findObjects]];
+//                    for (PFObject *connectionMessage in messageArray) {
+//                        ConnectionMessageData *message = [[ConnectionMessageData alloc] init];
+//                        PFFile *imageFile = [connectionMessage objectForKey:@"image_message"];
+//                        if (imageFile) {
+//                            message.imageMessage = [UIImage imageWithData:[imageFile getData]];
+//                        } else {
+//                            imageFile = [connectionMessage objectForKey:@"image_message"];
+//                        }
+//                        
+//                        message.messageId = [connectionMessage objectId];
+//                        [messagesListArray addObject:message];
+//                    }
+//                    
+//                    connection.messagesArray = messagesListArray;
+//                    [cachedConnectionsListArray addObject:connection];
+//                }
+//                rowCounter++;
+//                
+//                if ([self.delegate respondsToSelector:@selector(updateConnections:)])
+//                    [self.delegate updateConnections:cachedConnectionsListArray];
+//                
+//            }
+//            else {
+//                [cachedConnectionsListArray removeAllObjects];
+//                
+//                for (PFObject *connectionResponse in objects) {
+//                    ConnectionData *connection = [[ConnectionData alloc] init];
+//                    
+//                    if ([currentUUID isEqualToString:[connectionResponse objectForKey:@"connection1_id"]]) {
+//                        connectionKey = @"connection2";
+//                        myKey = @"connection1";
+//                    } else {
+//                        connectionKey = @"connection1";
+//                        myKey = @"connection2";
+//                    }
+//                    
+//                    connection.connectionUUID = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_id", connectionKey]];
+//                    connection.connectionName = [connectionResponse objectForKey:[NSString stringWithFormat:@"%@_name", connectionKey]];
+//                    connection.connectionId = [connectionResponse objectId];
+//                    connection.connectionNumber = connectionKey;
+//                    connection.myNumber = myKey;
+//                    connection.hasMessages = [[connectionResponse objectForKey:[NSString stringWithFormat:@"%@_has_messages", myKey]] boolValue];
+//                    connection.rowNumber = rowCounter;
+//                    
+//                    // No reason to fetch messages if there are no messages for the connection
+//                    if (connection.hasMessages) {
+//                        PFQuery *getMessages = [PFQuery queryWithClassName:@"ConnectionMessage"];
+//                        getMessages.cachePolicy = kPFCachePolicyNetworkOnly;
+//                        
+//                        [getMessages whereKey:@"connection_id" equalTo:[connectionResponse objectId]];
+//                        [getMessages whereKey:@"message_for" equalTo:currentUUID];
+//                        
+//                        [getMessages findObjectsInBackgroundWithBlock:^(NSArray *messageArray, NSError *error) {
+//                            if (!error) {
+//                                for (PFObject *connectionMessage in messageArray) {
+//                                    PFFile *imageFile = [connectionMessage objectForKey:@"image_message"];
+//                                    
+//                                    ConnectionMessageData *message = [[ConnectionMessageData alloc] init];
+//                                    message.imageMessage = [UIImage imageWithData:[imageFile getData]];
+//                                    message.messageId = [connectionMessage objectId];
+//                                    
+//                                    [messagesListArray addObject:message];
+//                                }
+//                                
+//                                connection.messagesArray = messagesListArray;
+//                                
+//                                if ([self.delegate respondsToSelector:@selector(updateConnection:)])
+//                                    [self.delegate updateConnection:connection];
+//                            }
+//                            else {
+//                                NSLog(@"ERRORRRR *****");
+//                            }
+//                        }];
+//                        
+//                    }
+//                    
+//                    connection.messagesArray = messagesListArray;
+//                    [cachedConnectionsListArray addObject:connection];
+//                    
+//                }
+//                rowCounter++;
+//                
+//                if ([self.delegate respondsToSelector:@selector(updateConnections:)])
+//                    [self.delegate updateConnections:cachedConnectionsListArray];
+//            }
+//        }
+//    }];
+//    [spinner hide:YES];
+}
+
+
+
+
+
+
 
 - (void)getConnections:(UIView*)currentView {
     __block BOOL isCacheCycle = YES;
