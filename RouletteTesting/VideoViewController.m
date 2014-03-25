@@ -53,10 +53,11 @@
     // For testing I'm doing this
 //    [self newConnection];
     
-    UIStoryboard *storyBoard = [UIStoryboard storyboardWithName:@"Main_iPhone" bundle:nil];
-    RouletteTestingMasterViewController *cV = (RouletteTestingMasterViewController*)[storyBoard instantiateViewControllerWithIdentifier:@"connections1"];
-//    ConnectionsViewController *cV = (ConnectionsViewController*)[storyBoard instantiateViewControllerWithIdentifier:@"connections2"];
-    [self presentViewController:cV animated:YES completion:nil];
+//    UIStoryboard *storyBoard = [UIStoryboard storyboardWithName:@"Main_iPhone" bundle:nil];
+//    RouletteTestingMasterViewController *cV = (RouletteTestingMasterViewController*)[storyBoard instantiateViewControllerWithIdentifier:@"connections1"];
+//    [self presentViewController:cV animated:YES completion:nil];
+    
+    [self performSegueWithIdentifier:@"PushConnections" sender:self];
 }
 
 - (void)connectionsView {
@@ -101,17 +102,27 @@
     // Build path to data file
     NSString *dataFilePath = [[NSString alloc] initWithString:[docsDir stringByAppendingPathComponent:@"data.archive"]];
     
+    
+//    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"messageIdsArray"];
+//    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    
     ConnectionData *connectionToCache = [[ConnectionData alloc] init];
     connectionToCache.connectionUUID = @"4371E73A-15DF-4CA1-998D-10CB6B9B4A2D";
     connectionToCache.connectionName = @"Michael's iPhone 5";
     connectionToCache.connectionId = @"hBsKsmTZCH";
+    
+    // FOR IPHONE
+//    connectionToCache.connectionUUID = @"418201B4-96EA-4BB9-9D12-EC861C09E094";
+//    connectionToCache.connectionName = @"Mike's iPhone Sim";
+//    connectionToCache.connectionId = @"hBsKsmTZCH";
     
     NSMutableArray *array = [[NSMutableArray alloc] initWithObjects:connectionToCache, nil];
     
     NSLog(@"%@", dataFilePath);
     
     [NSKeyedArchiver archiveRootObject:array toFile:dataFilePath];
-    
+    return;
     [connection saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
         if (succeeded) {
             NSLog(@"Successfully Saved New Connection!");

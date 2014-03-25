@@ -18,7 +18,6 @@
 		7746184E18A6E2CC000484F5 /* Main_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7746184C18A6E2CC000484F5 /* Main_iPad.storyboard */; };
 		7746185118A6E2CC000484F5 /* RouletteTesting.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7746184F18A6E2CC000484F5 /* RouletteTesting.xcdatamodeld */; };
 		7746185418A6E2CC000484F5 /* RouletteTestingMasterViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7746185318A6E2CC000484F5 /* RouletteTestingMasterViewController.m */; };
-		7746185718A6E2CC000484F5 /* RouletteTestingDetailViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7746185618A6E2CC000484F5 /* RouletteTestingDetailViewController.m */; };
 		7746185918A6E2CC000484F5 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7746185818A6E2CC000484F5 /* Images.xcassets */; };
 		7746186018A6E2CC000484F5 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7746185F18A6E2CC000484F5 /* XCTest.framework */; };
 		7746186118A6E2CC000484F5 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7746183518A6E2CC000484F5 /* Foundation.framework */; };
@@ -38,6 +37,7 @@
 		7746188E18A8D7D0000484F5 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7746188D18A8D7D0000484F5 /* Security.framework */; };
 		7746189018A8D7D7000484F5 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7746188F18A8D7D7000484F5 /* SystemConfiguration.framework */; };
 		77A7D80218DD5BEC0097B103 /* ConnectionCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 77A7D80118DD5BEC0097B103 /* ConnectionCell.m */; };
+		77A7D80518DE718D0097B103 /* MessagesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 77A7D80418DE718D0097B103 /* MessagesViewController.m */; };
 		77D472D418BDEACB00254AAB /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 77D472D318BDEACB00254AAB /* VideoViewController.m */; };
 		77D472DC18BDEE6400254AAB /* NSString+FontAwesome.m in Sources */ = {isa = PBXBuildFile; fileRef = 77D472DB18BDEE6400254AAB /* NSString+FontAwesome.m */; };
 		77D472DD18BDEE8300254AAB /* fontawesome-webfont.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 77D472D718BDED5600254AAB /* fontawesome-webfont.ttf */; };
@@ -80,8 +80,6 @@
 		7746185018A6E2CC000484F5 /* RouletteTesting.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = RouletteTesting.xcdatamodel; sourceTree = "<group>"; };
 		7746185218A6E2CC000484F5 /* RouletteTestingMasterViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RouletteTestingMasterViewController.h; sourceTree = "<group>"; };
 		7746185318A6E2CC000484F5 /* RouletteTestingMasterViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RouletteTestingMasterViewController.m; sourceTree = "<group>"; };
-		7746185518A6E2CC000484F5 /* RouletteTestingDetailViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RouletteTestingDetailViewController.h; sourceTree = "<group>"; };
-		7746185618A6E2CC000484F5 /* RouletteTestingDetailViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RouletteTestingDetailViewController.m; sourceTree = "<group>"; };
 		7746185818A6E2CC000484F5 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		7746185E18A6E2CC000484F5 /* RouletteTestingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RouletteTestingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7746185F18A6E2CC000484F5 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -102,6 +100,8 @@
 		7746188F18A8D7D7000484F5 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		77A7D80018DD5BEC0097B103 /* ConnectionCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConnectionCell.h; path = ../ConnectionCell.h; sourceTree = "<group>"; };
 		77A7D80118DD5BEC0097B103 /* ConnectionCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ConnectionCell.m; path = ../ConnectionCell.m; sourceTree = "<group>"; };
+		77A7D80318DE718D0097B103 /* MessagesViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MessagesViewController.h; path = ../MessagesViewController.h; sourceTree = "<group>"; };
+		77A7D80418DE718D0097B103 /* MessagesViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MessagesViewController.m; path = ../MessagesViewController.m; sourceTree = "<group>"; };
 		77D472D218BDEACB00254AAB /* VideoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
 		77D472D318BDEACB00254AAB /* VideoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
 		77D472D718BDED5600254AAB /* fontawesome-webfont.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "fontawesome-webfont.ttf"; sourceTree = "<group>"; };
@@ -222,13 +222,13 @@
 				7746184918A6E2CC000484F5 /* Main_iPhone.storyboard */,
 				77F2D60A18BF1C3500D36D74 /* MBProgressHUD.h */,
 				77F2D60B18BF1C3500D36D74 /* MBProgressHUD.m */,
+				77A7D80318DE718D0097B103 /* MessagesViewController.h */,
+				77A7D80418DE718D0097B103 /* MessagesViewController.m */,
 				77F2D60718BF052900D36D74 /* ParseNetworkManager.h */,
 				77F2D60818BF052900D36D74 /* ParseNetworkManager.m */,
 				7746184F18A6E2CC000484F5 /* RouletteTesting.xcdatamodeld */,
 				7746184618A6E2CC000484F5 /* RouletteTestingAppDelegate.h */,
 				7746184718A6E2CC000484F5 /* RouletteTestingAppDelegate.m */,
-				7746185518A6E2CC000484F5 /* RouletteTestingDetailViewController.h */,
-				7746185618A6E2CC000484F5 /* RouletteTestingDetailViewController.m */,
 				7746185218A6E2CC000484F5 /* RouletteTestingMasterViewController.h */,
 				7746185318A6E2CC000484F5 /* RouletteTestingMasterViewController.m */,
 				7746183E18A6E2CC000484F5 /* Supporting Files */,
@@ -397,13 +397,13 @@
 				7746185118A6E2CC000484F5 /* RouletteTesting.xcdatamodeld in Sources */,
 				77F2D61A18C5A37200D36D74 /* ConnectionGalleryCell.m in Sources */,
 				7746185418A6E2CC000484F5 /* RouletteTestingMasterViewController.m in Sources */,
-				7746185718A6E2CC000484F5 /* RouletteTestingDetailViewController.m in Sources */,
 				77A7D80218DD5BEC0097B103 /* ConnectionCell.m in Sources */,
 				77F2D60C18BF1C3500D36D74 /* MBProgressHUD.m in Sources */,
 				77F2D60918BF052900D36D74 /* ParseNetworkManager.m in Sources */,
 				77F2D60618BEFC0900D36D74 /* ConnectionsViewController.m in Sources */,
 				7746184418A6E2CC000484F5 /* main.m in Sources */,
 				77D472D418BDEACB00254AAB /* VideoViewController.m in Sources */,
+				77A7D80518DE718D0097B103 /* MessagesViewController.m in Sources */,
 				7746184818A6E2CC000484F5 /* RouletteTestingAppDelegate.m in Sources */,
 				7746187A18A8CCBA000484F5 /* ConnectionData.m in Sources */,
 				77FDA3BB18CD45AD00EDDCE7 /* ConnectionMessageData.m in Sources */,

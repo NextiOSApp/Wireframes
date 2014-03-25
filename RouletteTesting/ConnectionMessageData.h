@@ -10,9 +10,10 @@
 
 @interface ConnectionMessageData : NSObject <NSCoding>
 
+@property (nonatomic) NSString *messageId;
+@property (nonatomic) NSString *connectionId;
 @property (nonatomic) UIImage *imageMessage;
 @property (nonatomic) UIImage *videoMessage;
-@property (nonatomic) NSString *connectionId;
-@property (nonatomic) NSString *messageId;
+
 
 @end

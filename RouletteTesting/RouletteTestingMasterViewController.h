@@ -36,6 +36,5 @@
 
 @property (nonatomic) IBOutlet UILabel *connectionName;
 @property (nonatomic) IBOutlet UITableView *tableView;
-@property (nonatomic) IBOutlet UIImageView *imageMessageView;
 
 @end

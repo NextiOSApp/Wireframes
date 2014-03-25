@@ -12,9 +12,8 @@
 
 @protocol ParseManagerProtocol <NSObject>
 @required
-- (void)updateConnections:(NSMutableArray*)cachedConnectionList;
-- (void)updateConnection:(ConnectionData*)connection;
--(void)updateMessages:(NSMutableArray *)messages;
+- (void)updateMessages:(NSMutableArray *)messages;
+- (void)endRefresh;
 @end
 
 
@@ -23,13 +22,9 @@
 
 + (void)establishConnection;
 
-//+ (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler;
-
 - (BOOL)checkIfUserExists:(NSString*)UUID;
 
-- (void)fetchConnectionsList:(UIView*)currentView;
 - (void)getConnections:(UIView*)currentView;
-- (void)getConnections1:(UIView*)currentView;
 
 - (BOOL)uploadMessage:(NSData*)imageData connection:(ConnectionData *)currentConnection forView:(UIView*)currentView;
 - (BOOL)uploadVideoMessage:(NSData*)imageData recieverUUID:(NSString*)currentConnectionUUID forView:(UIView*)currentView;

@@ -8,6 +8,7 @@
 
 #import "RouletteTestingMasterViewController.h"
 #import "ConnectionCell.h"
+#import "MessagesViewController.h"
 
 static NSString * const KeychainItem_Service = @"FDKeychain";
 
@@ -31,15 +32,9 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
 {
     [super viewDidLoad];
     
-    self.navigationItem.leftBarButtonItem = self.editButtonItem;
-    
-    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(insertNewObject:)];
-    self.navigationItem.rightBarButtonItem = addButton;
-    
-    UITapGestureRecognizer *dismissPhotoTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissImageView:)];
-    dismissPhotoTap.numberOfTapsRequired = 1;
-    dismissPhotoTap.numberOfTouchesRequired = 1;
-    [self.imageMessageView addGestureRecognizer:dismissPhotoTap];
+    connectionsListArray = [[NSMutableArray alloc] init];
+    parseManager = [[ParseNetworkManager alloc] init];
+    parseManager.delegate = self;
     
     if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
         self.imagePicker = [self getImagePicker];
@@ -49,14 +44,9 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     [self.refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];
     [self.tableView addSubview:self.refreshControl];
     
-    connectionsListArray = [[NSMutableArray alloc] init];
-    
-    parseManager = [[ParseNetworkManager alloc] init];
-    parseManager.delegate = self;
-    
     NSFileManager *fileMgr = [NSFileManager defaultManager];
     
-    // Get documetns directory
+    // Get documents directory
     NSArray *dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *docsDir = dirPaths[0];
     
@@ -68,39 +58,19 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
         connectionsListArray = [NSKeyedUnarchiver unarchiveObjectWithFile:dataFilePath];
     }
 
-
-//    [parseManager getConnections:self.view];
-    [parseManager getConnections1:self.view];
+    [parseManager getConnections:self.view];
 }
 
 - (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler {
-    [parseManager getConnections1:self.view];
+    [parseManager getConnections:self.view];
     
+    // Need to move this logic so completetionHandler is called once we get the objects from the server in the background
     UIBackgroundFetchResult result = UIBackgroundFetchResultNewData;
     completionHandler(result);
 }
 
 - (void)refresh {
     [parseManager getConnections:self.view];
-}
-
-- (void)dismissImageView:(UITapGestureRecognizer *)recognizer {
-    [self.parseManager deleteImageMessage:[[currentConnection.messagesArray objectAtIndex:0] messageId]];
-    
-    // Remove Cached Image Path From User Defaults AND Delete File From Documents Directory
-//    NSString *cachedImagePath = [[NSUserDefaults standardUserDefaults] objectForKey:@"image_message"];
-//    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"image_message"];
-//    [[NSUserDefaults standardUserDefaults] synchronize];
-//    NSFileManager *fileManager = [[NSFileManager alloc] init];
-//    [fileManager removeItemAtPath:cachedImagePath error:nil];
-    
-    [[self.tableView cellForRowAtIndexPath:self.currentRow] setBackgroundColor:[UIColor whiteColor]];
-    
-//    NSArray *reloadRow = [NSArray arrayWithObject:self.currentRow];
-//    [self.tableView reloadRowsAtIndexPaths:reloadRow withRowAnimation:YES];
-    [self.imageMessageView setImage:nil];
-    
-    [self.imageMessageView setHidden:YES];
 }
 
 - (void)didReceiveMemoryWarning
@@ -192,30 +162,26 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     return NO;
 }
 
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([[segue identifier] isEqualToString:@"PushMessages"]) {
+        MessagesViewController *messagesViewController = [segue destinationViewController];
+        messagesViewController.messages = currentConnection.messagesArray;
+    }
+    
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     currentConnection = [connectionsListArray objectAtIndex:indexPath.row];
+    currentConnection.connectionId = @"hBsKsmTZCH";
+    currentConnection.connectionUUID = @"418201B4-96EA-4BB9-9D12-EC861C09E094";
     
     if ([currentConnection.messagesArray count] > 0) {
-        // Display image
-        ConnectionMessageData *currentMessage = [currentConnection.messagesArray objectAtIndex:0];
-        [self.imageMessageView setImage:currentMessage.imageMessage];
-        
-        self.imageMessageView.contentMode = UIViewContentModeScaleAspectFill;
-        [self.imageMessageView setHidden:NO];
-        
-        // *** Maybe not best solution?
-        self.currentRow = indexPath;
+        [self performSegueWithIdentifier:@"PushMessages" sender:self];
 
     } else if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
-        
-        // Check if device supports
-        // UIImagePickerControllerSourceTypeSavedPhotosAlbum
-        // UIImagePickerControllerSourceTypePhotoLibrary
-        
         [self presentViewController:[self getImagePicker] animated:YES completion:nil];
     } else {
-//      There is not a camera on this device so display alert instead
         NSLog(@"No Camera On This Device");
     }
     
@@ -227,30 +193,13 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     if (!self.imagePicker) {
         self.imagePicker = [[UIImagePickerController alloc] init];
         self.imagePicker.delegate = self;
-        
         self.imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
-        
         self.imagePicker.mediaTypes = @[(NSString*) kUTTypeImage, (NSString*) kUTTypeMovie];
         self.imagePicker.videoMaximumDuration = 10;
-        
-#warning @"I'm sure we'll want to allow editing of taken image / video like snapchat."
-        // Don't allow user to edit image (scale, move, etc. )
         self.imagePicker.allowsEditing = NO;
     }
     
     return self.imagePicker;
-}
-
-
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
-{
-//    if ([[segue identifier] isEqualToString:@"showDetail"]) {
-//        NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
-//        NSManagedObject *object = [[self fetchedResultsController] objectAtIndexPath:indexPath];
-//        [[segue destinationViewController] setDetailItem:object];
-//    }
-    
-    
 }
 
 #pragma mark - Image Picker Delegate Methods
@@ -265,7 +214,7 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
         // Original unedited image
         UIImage *image = info[UIImagePickerControllerOriginalImage];
         
-        // Grab Image Data at specified quality
+        // Grab Image Data at specified quality so meet the < 1 MB requirement of the Free Parse Version
         NSData *imageData = UIImageJPEGRepresentation(image, 0.5);
         NSLog(@"Image Size: %.1f MB", ([imageData length]/1048576.0));
         [parseManager uploadMessage:imageData connection:currentConnection forView:self.view];
@@ -281,53 +230,6 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
         NSString *videoPath = [[info objectForKey:UIImagePickerControllerMediaURL] path];
         NSURL *url = info[UIImagePickerControllerMediaURL];
         NSData *videoData = [NSData dataWithContentsOfURL:url];
-        
-        
-        
-//        PFFile *videoFile = [PFFile fileWithData:videoData];
-        // Save in Background
-//        [videoFile saveInBackground];
-        
-        if ([parseManager uploadVideoMessage:videoData recieverUUID:currentConnectionUUID forView:self.view]) {
-            NSLog(@"Upload Success!");
-            [self.tableView reloadData];
-        } else {
-            NSLog(@"Upload Failed!");
-        }
-        
-        
-        // Create Video Object
-        
-        // Request a background task to allow finish of upload even if app is sent to background
-//        self.photoPostBackgroundTaskId = [[UIApplication sharedApplication]   beginBackgroundTaskWithExpirationHandler:^{
-//            [[UIApplication sharedApplication] endBackgroundTask:self.photoPostBackgroundTaskId];
-//        }];
-        
-        
-        // Save the Video
-        
-        
-        
-        // Write To Device
-//        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-//        NSString *documentsDirectory = [paths objectAtIndex:0];
-//        NSString *tempPath = [documentsDirectory stringByAppendingFormat:@"/vid1.mp4"];
-        
-        // Save To Photos Album
-//        if (UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(NSString *videoPath)) {
-//            UISaveVideoAtPathToSavedPhotosAlbum(videoPath, self, @selector(video:didFinishSavingWithError:contextInfo:), nil);
-//        }
-        
-//        BOOL success = [videoData writeToFile:tempPath atomically:NO];
-        
-        // Save Video
-//        if (UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(url))
-//        {
-//            UISaveVideoAtPathToSavedPhotosAlbum(url,
-//                                                self,
-//                                                @selector(video:finishedSavingWithError:contextInfo:),
-//                                                nil);
-//        }
     }
 }
 
@@ -337,71 +239,50 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
 
 #pragma mark Parse Manager delegate methods
 
-// Append To Cached Core Data Table
+- (void)endRefresh {
+    [self.refreshControl endRefreshing];
+}
+
 -(void)updateMessages:(NSMutableArray *)messages {
-    // Update Any Rows that match the ID of the connectionID the messages array returns
-//    NSArray *a = [self.tableView indexPathsForVisibleRows];
-//    ConnectionCell *cell = [self.tableView cellForRowAtIndexPath:[a firstObject]];
-    
     NSFileManager *fileMgr;
     NSString *docsDir;
     NSArray *dirPaths;
     
     fileMgr = [NSFileManager defaultManager];
-    
-    // Get documetns directory
     dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     docsDir = dirPaths[0];
-    
-    // Build path to data file
     NSString *dataFilePath = [[NSString alloc] initWithString:[docsDir stringByAppendingPathComponent:@"data.archive"]];
     
-    // Check if the file already exists
-//    if ([fileMgr fileExistsAtPath:dataFilePath]) {
-//        NSMutableArray *dataArray;
-//    
-//        dataArray = [NSKeyedUnarchiver unarchiveObjectWithFile:dataFilePath];
-//    }
-    
-    // Get cached Messaged IDs to append new ones
-    NSMutableArray *cachedMessagesIds = [NSMutableArray arrayWithArray:[[NSUserDefaults standardUserDefaults] objectForKey:@"messageIdsArray"]];
-    
     NSMutableArray *cachedConnections = [NSKeyedUnarchiver unarchiveObjectWithFile:dataFilePath];
+    NSMutableArray *newMessages = [[NSMutableArray alloc] initWithCapacity:[messages count]];
+    
     int counter = 0;
+    
+    // Need to find a better way to do this. I really only want to lopo through the Connections with new Messages
+    // Maybe have to use Core Data to query a specific list of ids locally?
     for (ConnectionData *connection in cachedConnections) {
         for (ConnectionMessageData *message in messages) {
             if ([message.connectionId isEqualToString:connection.connectionId]) {
-                [[cachedConnections objectAtIndex:counter] setMessagesArray:[NSMutableArray arrayWithObject:message]];
-                [connection.messagesArray arrayByAddingObject:message];
+                [newMessages addObject:message];
             }
-            [cachedMessagesIds addObject:message.messageId];
         }
+        
+        NSMutableArray *currMessages = [[NSMutableArray alloc] initWithArray:connection.messagesArray];
+        [currMessages addObjectsFromArray:newMessages];
+        
+        [[connectionsListArray objectAtIndex:counter] setMessagesArray:currMessages];
+        
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:counter inSection:0];
+        
+        [self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+        counter++;
     }
     
-    // Save new list of cached Message IDs
-    [[NSUserDefaults standardUserDefaults] setObject:cachedMessagesIds forKey:@"messageIdsArray"];
+    dispatch_async( dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [NSKeyedArchiver archiveRootObject:connectionsListArray toFile:dataFilePath];
+    });
     
-    connectionsListArray = cachedConnections;
-    NSMutableArray *arr = [[NSMutableArray alloc] initWithArray:connectionsListArray];
-//    NSError *error;
-//    BOOL success = [[NSFileManager defaultManager] removeItemAtPath:dataFilePath error:&error];
-    // Re-save new list
-    [NSKeyedArchiver archiveRootObject:arr toFile:dataFilePath];
-    
-    [self.tableView reloadData];
     [self.refreshControl endRefreshing];
-}
-
-
-- (void)updateConnections:(NSMutableArray *)cachedConnectionList {
-    self.connectionsListArray = cachedConnectionList;
-    [self.tableView reloadData];
-    [self.refreshControl endRefreshing];
-}
-
-- (void)updateConnection:(ConnectionData *)connection {
-    NSIndexPath *number = [NSIndexPath indexPathForRow:connection.rowNumber inSection:0];
-    [self.tableView reloadRowsAtIndexPaths:@[number] withRowAnimation:UITableViewRowAnimationFade];
 }
 
 #pragma mark - Fetched results controller
