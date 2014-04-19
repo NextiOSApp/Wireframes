@@ -50,6 +50,63 @@
 - (IBAction)connView:(id)sender {
     NSLog(@"CONNECTIONS button clicked.");
     
+    // HACKING CONNECTION PART SINCE THIS IS NOT SETUP
+    
+    // Fetch existing users
+//    PFQuery *fetchUsersQuery = [PFQuery queryWithClassName:@"User"];
+//    NSArray *usersArray = [fetchUsersQuery findObjects];
+//    
+//    NSMutableArray *array = [[NSMutableArray alloc] init];
+//    
+//    for (PFObject *user in usersArray){
+//        NSString *uuid = [user objectForKey:@"uuid"];
+//        NSString *connectionName = [[NSString alloc] init];
+//        
+//
+//        if ([uuid isEqualToString:@"418201B4-96EA-4BB9-9D12-EC861C09E094"])
+//            connectionName = @"Mike's iPhone Sim";
+//        else
+//            connectionName = @"Michael's iPhone 5";
+//        
+//        PFObject *connection = [PFObject objectWithClassName:@"Connection"];
+//        [connection setObject:[[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"] forKey:@"connection1_id"];
+//        [connection setObject:@"Chris Hayes iPhone" forKey:@"connection1_name"];
+//        [connection setObject:[NSNumber numberWithBool:NO] forKey:@"connection1_has_messages"];
+//        [connection setObject:uuid forKey:@"connection2_id"];
+//        [connection setObject:connectionName forKey:@"connection2_name"];
+//        [connection setObject:[NSNumber numberWithBool:NO] forKey:@"connection2_has_messages"];
+//        
+//        [connection save];
+//        
+//        PFQuery *queryId = [PFQuery queryWithClassName:@"Connection"];
+//        [queryId whereKey:@"connection1_id" containsString:uuid];
+//        
+//        PFObject *object = [queryId getFirstObject];
+//        NSString *objectId = [object objectId];
+//        
+//        
+//        
+//        ConnectionData *connectionToCache = [[ConnectionData alloc] init];
+//        connectionToCache.connectionUUID = uuid;
+//        connectionToCache.connectionName = connectionName;
+//        connectionToCache.connectionId = objectId;
+//        
+//        [array addObject:connectionToCache];
+//    }
+//    
+//    
+//    NSFileManager *fileMgr;
+//    NSString *docsDir;
+//    NSArray *dirPaths;
+//    
+//    fileMgr = [NSFileManager defaultManager];
+//    dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+//    docsDir = dirPaths[0];
+//    
+//    NSString *dataFilePath = [[NSString alloc] initWithString:[docsDir stringByAppendingPathComponent:@"data.archive"]];
+//    
+//    [NSKeyedArchiver archiveRootObject:array toFile:dataFilePath];
+    
     // For testing I'm doing this
 //    [self newConnection];
     
@@ -110,12 +167,12 @@
     ConnectionData *connectionToCache = [[ConnectionData alloc] init];
     connectionToCache.connectionUUID = @"4371E73A-15DF-4CA1-998D-10CB6B9B4A2D";
     connectionToCache.connectionName = @"Michael's iPhone 5";
-    connectionToCache.connectionId = @"hBsKsmTZCH";
+    connectionToCache.connectionId = @"RF66NWsMlU";
     
     // FOR IPHONE
 //    connectionToCache.connectionUUID = @"418201B4-96EA-4BB9-9D12-EC861C09E094";
 //    connectionToCache.connectionName = @"Mike's iPhone Sim";
-//    connectionToCache.connectionId = @"hBsKsmTZCH";
+//    connectionToCache.connectionId = @"RF66NWsMlU";
     
     NSMutableArray *array = [[NSMutableArray alloc] initWithObjects:connectionToCache, nil];
     

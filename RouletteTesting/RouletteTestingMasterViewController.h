@@ -13,7 +13,7 @@
 #import "ParseNetworkManager.h"
 #import <CoreData/CoreData.h>
 
-@interface RouletteTestingMasterViewController : UIViewController <NSFetchedResultsControllerDelegate, UITableViewDataSource, UITableViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ParseManagerProtocol, UIGestureRecognizerDelegate>
+@interface RouletteTestingMasterViewController : UIViewController <NSFetchedResultsControllerDelegate, UITableViewDataSource, UITableViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ParseManagerProtocol, UIGestureRecognizerDelegate, UIActionSheetDelegate>
 
 - (void)fetchNewConnectionsWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler;
 

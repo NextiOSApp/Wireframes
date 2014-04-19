@@ -37,7 +37,9 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     parseManager.delegate = self;
     
     if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
-        self.imagePicker = [self getImagePicker];
+        self.imagePicker = [self getImagePicker:UIImagePickerControllerSourceTypeCamera];
+    } else {
+        self.imagePicker = [self getImagePicker:UIImagePickerControllerSourceTypePhotoLibrary];
     }
     
     self.refreshControl = [[UIRefreshControl alloc] init];
@@ -172,34 +174,69 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    currentConnection = [connectionsListArray objectAtIndex:indexPath.row];
-    currentConnection.connectionId = @"hBsKsmTZCH";
-    currentConnection.connectionUUID = @"418201B4-96EA-4BB9-9D12-EC861C09E094";
+//    currentConnection = [connectionsListArray objectAtIndex:indexPath.row];
+//    currentConnection.connectionId = @"hBsKsmTZCH";
+//    currentConnection.connectionUUID = @"418201B4-96EA-4BB9-9D12-EC861C09E094";
+    
+//    if (NO) {
+//    //    if ([currentConnection.messagesArray count] > 0) {
+//        [self performSegueWithIdentifier:@"PushMessages" sender:self];
+//
+//    } else if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+//        [self presentViewController:[self getImagePicker:UIImagePickerControllerSourceTypeCamera] animated:YES completion:nil];
+//    } else {
+////        imagePicker.modalPresentationStyle = UIModalPresentationCurrentContext;
+//        [self presentViewController:[self getImagePicker:UIImagePickerControllerSourceTypePhotoLibrary] animated:YES completion:nil];
+//        NSLog(@"No Camera On This Device");
+//    }
     
     if ([currentConnection.messagesArray count] > 0) {
         [self performSegueWithIdentifier:@"PushMessages" sender:self];
-
-    } else if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
-        [self presentViewController:[self getImagePicker] animated:YES completion:nil];
     } else {
-        NSLog(@"No Camera On This Device");
+        [self showImageActions:nil];
     }
     
     [self.tableView deselectRowAtIndexPath:indexPath animated:NO];
 }
 
-#warning @"This could cause problems because I'm re-using the same instance of the camera. For now is good but will need testing"
-- (UIImagePickerController *)getImagePicker {
+- (UIImagePickerController *)getImagePicker:(UIImagePickerControllerSourceType)sourceType {
     if (!self.imagePicker) {
         self.imagePicker = [[UIImagePickerController alloc] init];
         self.imagePicker.delegate = self;
-        self.imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
+        self.imagePicker.sourceType = sourceType;
         self.imagePicker.mediaTypes = @[(NSString*) kUTTypeImage, (NSString*) kUTTypeMovie];
         self.imagePicker.videoMaximumDuration = 10;
         self.imagePicker.allowsEditing = NO;
+    } else if (self.imagePicker.sourceType != sourceType) {
+        self.imagePicker.sourceType = sourceType;
     }
     
     return self.imagePicker;
+}
+
+- (void)showImageActions:(id)sender {
+    NSString *messageOptions = [[NSString alloc] init];
+    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+        UIActionSheet *imageAction = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Choose Photo", @"Take Photo", nil];
+        imageAction.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+        [imageAction  showInView:self.view];
+    } else {
+        UIActionSheet *imageAction = [[UIActionSheet alloc] initWithTitle:@"" delegate:self cancelButtonTitle:@"Cancel" destructiveButtonTitle:nil otherButtonTitles:@"Choose Photo", nil];
+        imageAction.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+        [imageAction  showInView:self.view];
+    }
+
+    
+    //    [imageAction release];
+}
+
+-(void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == 0) {
+        [self presentViewController:[self getImagePicker:UIImagePickerControllerSourceTypePhotoLibrary] animated:YES completion:nil];
+    }
+    else if (buttonIndex == 1){
+        [self presentViewController:[self getImagePicker:UIImagePickerControllerSourceTypeCamera] animated:YES completion:nil];
+    }
 }
 
 #pragma mark - Image Picker Delegate Methods
@@ -279,6 +316,7 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     }
     
     dispatch_async( dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // Don't store object in memory through NSCoding. Store the string location of the saved image
         [NSKeyedArchiver archiveRootObject:connectionsListArray toFile:dataFilePath];
     });
     

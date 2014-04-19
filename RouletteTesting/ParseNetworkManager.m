@@ -58,6 +58,9 @@
 
     NSMutableArray *cachedMessagesIds = [NSMutableArray arrayWithArray:[[NSUserDefaults standardUserDefaults] objectForKey:@"messageIdsArray"]];
     
+//    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"messageIdsArray"];
+//    [[NSUserDefaults standardUserDefaults] synchronize];
+    
     PFQuery *getMessageIds = [PFQuery queryWithClassName:@"ConnectionMessage"];
     [getMessageIds whereKey:@"message_for" equalTo:uuid];
     [getMessageIds whereKey:@"objectId" notContainedIn:cachedMessagesIds];
@@ -72,11 +75,19 @@
                     [foundMessageIds addObject:[messageObject objectId]];
 
                     ConnectionMessageData *connectionMessage = [[ConnectionMessageData alloc] init];
-                    
-                    PFFile *imageFile = [messageObject objectForKey:@"image_message"];
-                    connectionMessage.imageMessage = [UIImage imageWithData:[imageFile getData]];
                     connectionMessage.messageId = [messageObject objectId];
                     connectionMessage.connectionId = [messageObject valueForKey:@"connection_id"];
+                    
+                    PFFile *imageFile = [messageObject objectForKey:@"image_message"];
+                    UIImage *messageImage = [UIImage imageWithData:[imageFile getData]];
+                    
+                    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+                    NSString *documentsDirectory = [paths objectAtIndex:0];
+                    
+                    NSString *imagePath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", connectionMessage.messageId]];
+                    [UIImageJPEGRepresentation(messageImage, .8) writeToFile:imagePath atomically:NO];
+                    
+                    connectionMessage.imageMessageLocation = imagePath;
                     
                     [messagesListArray addObject:connectionMessage];
                 }
@@ -124,7 +135,7 @@
                 
                 [getCurrentConnection getObjectInBackgroundWithId:currentConnection.connectionId block:^(PFObject *object, NSError *error) {
                     
-                    [object setObject:[NSNumber numberWithBool:YES] forKey:[NSString stringWithFormat:@"%@_has_messages", currentConnection.connectionNumber]];
+//                    [object setObject:[NSNumber numberWithBool:YES] forKey:[NSString stringWithFormat:@"%@_has_messages", currentConnection.connectionNumber]];
                     
                     [object saveInBackground];
                 }];

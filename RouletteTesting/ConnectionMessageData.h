@@ -12,6 +12,7 @@
 
 @property (nonatomic) NSString *messageId;
 @property (nonatomic) NSString *connectionId;
+@property (nonatomic) NSString *imageMessageLocation;
 @property (nonatomic) UIImage *imageMessage;
 @property (nonatomic) UIImage *videoMessage;
 

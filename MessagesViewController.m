@@ -75,14 +75,15 @@
         return cell;
     
     int cellRow = [indexPath row] * 2;
-    
-    self.leftImage = [(ConnectionMessageData*)[self.messages objectAtIndex:cellRow] imageMessage];
+    NSString *messageLocation = [(ConnectionMessageData*)[self.messages objectAtIndex:cellRow] imageMessageLocation];
+    self.leftImage = [UIImage imageWithContentsOfFile:messageLocation];
     UIImageView *image1 = (UIImageView*)[cell viewWithTag:50];
 //    [image1 addGestureRecognizer:self.messageTapGesture];
     [image1 setImage:self.leftImage];
     
     if (cellRow + 1 < [self.messages count]) {
-        self.rightImage = [(ConnectionMessageData*)[self.messages objectAtIndex:(cellRow+1)] imageMessage];
+        NSString *messageLocation = [(ConnectionMessageData*)[self.messages objectAtIndex:(cellRow+1)] imageMessageLocation];
+        self.rightImage = [UIImage imageWithContentsOfFile:messageLocation];
         UIImageView *image2 = (UIImageView*)[cell viewWithTag:51];
 //        [image2 addGestureRecognizer:self.messageTapGesture];
         [image2 setImage:self.rightImage];
@@ -92,7 +93,12 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    
+    // Blow Image Up Full Screen
+    // When You click again, it should dismiss
+    // Might be smart to restructure the view first while stuff happens in background so...
+    // ... remove selected message from "messages" array and reload table
+    // In Background, Delete message from database, remove message ID from cachedMessageIds, ...
+    //... remove message from messagesArray of current connection in cached connections (data.archive)
 }
 
 @end
