@@ -74,6 +74,7 @@
     if ([self.messages count] <= indexPath.row)
         return cell;
     
+    // This will chnage with the UICollectionView and for the better! But now since I have just 1 row, I have to do simple Math to out a message on the left side of the row and one on the right
     int cellRow = [indexPath row] * 2;
     NSString *messageLocation = [(ConnectionMessageData*)[self.messages objectAtIndex:cellRow] imageMessageLocation];
     self.leftImage = [UIImage imageWithContentsOfFile:messageLocation];
@@ -92,6 +93,7 @@
     return cell;
 }
 
+// Stooped work here because need to slow down and get the UICollectionView going
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     // Blow Image Up Full Screen
     // When You click again, it should dismiss

@@ -125,6 +125,7 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     cell.connectionNameLabel.text = currentConnection.connectionName;
     cell.connectionId = currentConnection.connectionId;
     
+    // This will obvioulsy change but for now this just changes the background color of the cell to notify me there are messages, and this also tells me how many messages.
     if ([currentConnection.messagesArray count] > 0) {
         cell.backgroundColor = [UIColor greenColor];
         cell.messageCountLabel.text = [NSString stringWithFormat:@"%d Messages", [currentConnection.messagesArray count]];
@@ -190,6 +191,8 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
 //        NSLog(@"No Camera On This Device");
 //    }
     
+    
+    // This will change too but this basically either takes you to the MessagesViewController to display the Messages OR it will bring up an action sheet to allow you to send a message through a new pic or library, depending on available options on device.
     if ([currentConnection.messagesArray count] > 0) {
         [self performSegueWithIdentifier:@"PushMessages" sender:self];
     } else {
@@ -285,6 +288,7 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     NSString *docsDir;
     NSArray *dirPaths;
     
+    // Get cached hash of list of connections
     fileMgr = [NSFileManager defaultManager];
     dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     docsDir = dirPaths[0];
@@ -295,7 +299,8 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
     
     int counter = 0;
     
-    // Need to find a better way to do this. I really only want to lopo through the Connections with new Messages
+    // Go through each Connection's messages array and if a new Message is found for that Connection Object then update it's messagesArray to include it.
+    // This is not super slow BUT need to find a better way to do this. I really only want to loop through the Connections with new Messages
     // Maybe have to use Core Data to query a specific list of ids locally?
     for (ConnectionData *connection in cachedConnections) {
         for (ConnectionMessageData *message in messages) {
@@ -307,16 +312,17 @@ static NSString * const KeychainItem_Service = @"FDKeychain";
         NSMutableArray *currMessages = [[NSMutableArray alloc] initWithArray:connection.messagesArray];
         [currMessages addObjectsFromArray:newMessages];
         
+        // Had to keep a counter to know which Connection I'm looking at
         [[connectionsListArray objectAtIndex:counter] setMessagesArray:currMessages];
         
+        // Want to update the row if it has changed immeditraely instead of waiting for everything. Better UX
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:counter inSection:0];
-        
         [self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
         counter++;
     }
     
+    // In the background, Store new Connections List Hash locally
     dispatch_async( dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Don't store object in memory through NSCoding. Store the string location of the saved image
         [NSKeyedArchiver archiveRootObject:connectionsListArray toFile:dataFilePath];
     });
     

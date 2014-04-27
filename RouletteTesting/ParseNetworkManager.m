@@ -54,13 +54,15 @@
 }
 
 - (void)getConnections:(UIView*)currentView {
-    NSString *uuid = [[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"];
-
-    NSMutableArray *cachedMessagesIds = [NSMutableArray arrayWithArray:[[NSUserDefaults standardUserDefaults] objectForKey:@"messageIdsArray"]];
-    
 //    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"messageIdsArray"];
 //    [[NSUserDefaults standardUserDefaults] synchronize];
     
+    NSString *uuid = [[NSUserDefaults standardUserDefaults] objectForKey:@"UUID"];
+    
+    // Grabbed cached messaged IDs. Will be used to in query to make sure I don't grab these IDs because I have them already
+    NSMutableArray *cachedMessagesIds = [NSMutableArray arrayWithArray:[[NSUserDefaults standardUserDefaults] objectForKey:@"messageIdsArray"]];
+    
+    // Find all messages that were sent to me (message_fornbdefines this) but exclude the IDs that I already have.
     PFQuery *getMessageIds = [PFQuery queryWithClassName:@"ConnectionMessage"];
     [getMessageIds whereKey:@"message_for" equalTo:uuid];
     [getMessageIds whereKey:@"objectId" notContainedIn:cachedMessagesIds];
@@ -72,29 +74,33 @@
                 NSMutableArray *messagesListArray = [[NSMutableArray alloc] init];
                 
                 for (PFObject *messageObject in messageObjects) {
+                    // Keep track of the new message IDs. Looking at this now I guess I could just add to the existing cachedMessagesIds Array but will refactor later.
                     [foundMessageIds addObject:[messageObject objectId]];
-
+                    
+                    // The following creates a local Message Object with the values fetched from the DB
                     ConnectionMessageData *connectionMessage = [[ConnectionMessageData alloc] init];
                     connectionMessage.messageId = [messageObject objectId];
                     connectionMessage.connectionId = [messageObject valueForKey:@"connection_id"];
                     
+                    // Only way to get an image from Parse. Can't directly grab it like other values
                     PFFile *imageFile = [messageObject objectForKey:@"image_message"];
                     UIImage *messageImage = [UIImage imageWithData:[imageFile getData]];
                     
+                    // This was the major memory issue. Can't store an image as binary data liek I was doing so I store it in a directory on the phone and then store that unique string path in my Message Object
                     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
                     NSString *documentsDirectory = [paths objectAtIndex:0];
-                    
                     NSString *imagePath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", connectionMessage.messageId]];
                     [UIImageJPEGRepresentation(messageImage, .8) writeToFile:imagePath atomically:NO];
-                    
                     connectionMessage.imageMessageLocation = imagePath;
                     
                     [messagesListArray addObject:connectionMessage];
                 }
-                
+                // This is where I think I can just add each Message Object ID to the cached list in the for loop
                 [cachedMessagesIds addObjectsFromArray:foundMessageIds];
                 [[NSUserDefaults standardUserDefaults] setObject:cachedMessagesIds forKey:@"messageIdsArray"];
                 
+                // Calls RouletteTestingMasterViewController.updateMessages
+                // Because this is a background method, I needed to make a delegate method to notify when the background process has finished to update the UI.
                 if ([self.delegate respondsToSelector:@selector(updateMessages:)])
                     [self.delegate updateMessages:messagesListArray];
             }
