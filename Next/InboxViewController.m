@@ -24,7 +24,6 @@
     {
         NSLog(@"Current user: %@", currentUser.username);
         self.moviePlayer = [[MPMoviePlayerController alloc] init];
-        self.t
     }
     else
     {
