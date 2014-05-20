@@ -8,12 +8,13 @@
 
 #import <UIKit/UIKit.h>
 #import <Parse/Parse.h>
-#import "ImageViewController.h"
 #import <MediaPlayer/MediaPlayer.h>
+#import "ImageViewController.h"
 
 @interface InboxViewController : UITableViewController
 
-@property(nonatomic, strong)NSArray *messages;
+@property (nonatomic, strong) NSArray *messages;
+@property (nonatomic, strong) NSArray *cachedMessages;
 @property (nonatomic, strong) PFObject *selectedMessage;
 @property (nonatomic, strong) MPMoviePlayerController *moviePlayer;
 

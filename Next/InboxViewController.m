@@ -19,11 +19,12 @@
 {
     [super viewDidLoad];
     
-    self.moviePlayer = [[MPMoviePlayerController alloc] init];
     PFUser *currentUser = [PFUser currentUser];
     if (currentUser)
     {
         NSLog(@"Current user: %@", currentUser.username);
+        self.moviePlayer = [[MPMoviePlayerController alloc] init];
+        self.t
     }
     else
     {
@@ -34,21 +35,47 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
+    __block BOOL isCheckCacheRound = YES;
+    
     [self.navigationController.navigationBar setHidden:NO];
     
     PFQuery *query = [PFQuery queryWithClassName:@"Messages"];
+    query.cachePolicy = kPFCachePolicyCacheThenNetwork;
     [query whereKey:@"recipientIds" equalTo:[[PFUser currentUser] objectId]];
     [query orderByDescending:@"createdAt"];
     [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
-        
         if (error) {
+            if ([[error userInfo] valueForKey:@"code"] == [NSNumber numberWithInteger:120])
+                NSLog(@"** CACHE MISS **");
+            
             NSLog(@"Error: %@ %@", error, [error userInfo]);
-        }
-        else {
-            // We found messages!
-            self.messages = objects;
-            [self.tableView reloadData];
-            NSLog(@"Retrieved %d messages", [self.messages count]);
+            isCheckCacheRound = NO;
+        } else {
+            if (isCheckCacheRound) {
+                NSLog(@"*** FOUND %d messages FROM THE CACHE ***", [self.messages count]);
+                self.cachedMessages = self.messages = objects;
+                [self.tableView reloadData];
+                isCheckCacheRound = NO;
+            } else {
+                BOOL cacheOutOfDate = NO;
+                NSLog(@"FOUND %d MESSAGES FROM THE NETWORK", [self.messages count]);
+                
+                NSArray *cachedMessageIds = [[NSArray alloc] initWithArray:[self.cachedMessages valueForKey:@"objectId"]];
+                NSArray *networkMessageIds = [[NSArray alloc] initWithArray:[objects valueForKey:@"objectId"]];
+                
+                for (NSString *objectId in cachedMessageIds) {
+                    if (![networkMessageIds containsObject:objectId]) {
+                        // Cache is out of date so reload table. Cache is automatically updated after this call too
+                        cacheOutOfDate = YES;
+                        break;
+                    }
+                }
+                
+                if (cacheOutOfDate) {
+                    self.messages = objects;
+                    [self.tableView reloadData];
+                }
+            }
         }
     }];
 }
@@ -73,6 +100,9 @@
     static NSString *CellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier forIndexPath:indexPath];
     
+    if ([self.messages count] <= indexPath.row)
+        return cell;
+    
     PFObject *message = [self.messages objectAtIndex:indexPath.row];
     cell.textLabel.text = [message objectForKey:@"senderName"];
     
@@ -91,6 +121,9 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    if ([self.messages count] <= indexPath.row)
+        return;
+    
     self.selectedMessage = [self.messages objectAtIndex:indexPath.row];
     NSString *fileType = [self.selectedMessage objectForKey:@"fileType"];
     if ([fileType isEqualToString:@"image"])
@@ -99,10 +132,12 @@
     }
     else
     {
-        PFFile *videoFIle = [self.selectedMessage objectForKey:@"file"];
-        NSURL *fileURL = [NSURL URLWithString:videoFIle.url];
+        PFFile *videoFile = [self.selectedMessage objectForKey:@"file"];
+        NSURL *fileURL = [NSURL URLWithString:videoFile.url];
         self.moviePlayer.contentURL = fileURL;
         [self.moviePlayer prepareToPlay];
+        // There's a slightly faster way to add the thumbnail images if we decide... justbecause it's deprecated now
+        // http://stackoverflow.com/questions/19105721/thumbnailimageattime-now-deprecated-whats-the-alternative
         [self.moviePlayer thumbnailImageAtTime:0 timeOption:MPMovieTimeOptionNearestKeyFrame];
         
         [self.view addSubview:self.moviePlayer.view];
@@ -112,7 +147,7 @@
     NSMutableArray *recipientIds = [NSMutableArray arrayWithArray:[self.selectedMessage objectForKey:@"recipientIds"]];
     NSLog(@"Recipients: %@", recipientIds);
     
-    if ([recipientIds count] == 1 )
+    if ([recipientIds count] == 1)
     {
         [self.selectedMessage deleteInBackground];
     }
@@ -130,10 +165,9 @@
 - (IBAction)logout:(id)sender {
     [PFUser logOut];
     [self performSegueWithIdentifier:@"showLogin" sender:self];
-    
 }
 
-- (void) prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
     if ([segue.identifier isEqualToString:@"showLogin"])
     {
