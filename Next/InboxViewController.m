@@ -152,8 +152,7 @@
     }
     else
     {
-        [recipientIds removeObject:[[PFUser currentUser] objectId]];
-        [self.selectedMessage setObject:recipientIds forKey:@"recipientIds"];
+        [self.selectedMessage removeObject:[[PFUser currentUser] objectId] forKey:@"recipientIds"];
         [self.selectedMessage saveInBackground];
     }
         
