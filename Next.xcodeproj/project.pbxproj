@@ -43,6 +43,7 @@
 		0BC1AD2A19274B6F00B9D482 /* CameraViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BC1AD2919274B6F00B9D482 /* CameraViewController.m */; };
 		0BC1AD2E192975C200B9D482 /* ImageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0BC1AD2D192975C200B9D482 /* ImageViewController.m */; };
 		0BC1AD301929B45D00B9D482 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0BC1AD2F1929B45D00B9D482 /* MediaPlayer.framework */; };
+		77CCABBB192DDCB4001567E8 /* ParseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 77CCABBA192DDCB4001567E8 /* ParseManager.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -103,6 +104,8 @@
 		0BC1AD2C192975C200B9D482 /* ImageViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImageViewController.h; sourceTree = "<group>"; };
 		0BC1AD2D192975C200B9D482 /* ImageViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageViewController.m; sourceTree = "<group>"; };
 		0BC1AD2F1929B45D00B9D482 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		77CCABB9192DDCB4001567E8 /* ParseManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParseManager.h; sourceTree = "<group>"; };
+		77CCABBA192DDCB4001567E8 /* ParseManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ParseManager.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -185,6 +188,7 @@
 		0B0BB0D91925C72C00178777 /* Next */ = {
 			isa = PBXGroup;
 			children = (
+				77CCABB8192DDC99001567E8 /* Managers */,
 				0B0BB0E21925C72C00178777 /* AppDelegate.h */,
 				0B0BB0E31925C72C00178777 /* AppDelegate.m */,
 				0B260B1D1925CF7900675B08 /* Main.storyboard */,
@@ -272,6 +276,15 @@
 				0BC1AD2D192975C200B9D482 /* ImageViewController.m */,
 			);
 			name = Camera;
+			sourceTree = "<group>";
+		};
+		77CCABB8192DDC99001567E8 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				77CCABB9192DDCB4001567E8 /* ParseManager.h */,
+				77CCABBA192DDCB4001567E8 /* ParseManager.m */,
+			);
+			name = Managers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -393,6 +406,7 @@
 				0BC1AD2E192975C200B9D482 /* ImageViewController.m in Sources */,
 				0B260B5C19263DD700675B08 /* EditFriendsViewController.m in Sources */,
 				0B260B2E1925E5AA00675B08 /* InboxViewController.m in Sources */,
+				77CCABBB192DDCB4001567E8 /* ParseManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

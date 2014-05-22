@@ -15,46 +15,47 @@
 
 @implementation CameraViewController
 
+@synthesize parseManager;
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     self.recipients = [[NSMutableArray alloc] init];
 }
 
+- (void)updateFriends:(NSArray *)foundFriends {
+    self.friends = foundFriends;
+    [self.tableView reloadData];
+}
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
-    self.friendsRelation = [[PFUser currentUser] objectForKey:@"friendsRelation"];
-    
-    PFQuery *query = [self.friendsRelation query];
-    [query orderByAscending:@"username"];
-    [query findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
-        if (error) {
-            NSLog(@"Error %@ %@", error, [error userInfo]);
-        }
-        else {
-            self.friends = objects;
-            [self.tableView reloadData];
-        }
-    }];
+    parseManager = [[ParseManager alloc] init];
+    parseManager.delegate = self;
+    [parseManager getFriendsWithFilter:@"Mine"];
     
     if (self.image == nil && [self.videoFilePath length] == 0) {
-        self.imagePicker = [[UIImagePickerController alloc] init];
-        self.imagePicker.delegate = self;
-        self.imagePicker.allowsEditing = NO;
-        self.imagePicker.videoMaximumDuration = 10;
-        
-        if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
-            self.imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
-        }
-        else {
-            self.imagePicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
-        }
-        
-        self.imagePicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:self.imagePicker.sourceType];
-        
+        // My reasoning for moving this to it's own method is because I want this method to be the outline of what's happening rather than being long and cluttered. As we keep building, there's only more code that we'll be putting here
+        [self setupImagePicker];
         [self presentViewController:self.imagePicker animated:NO completion:nil];
     }
+}
+
+- (void)setupImagePicker {
+    self.imagePicker = [[UIImagePickerController alloc] init];
+    self.imagePicker.delegate = self;
+    self.imagePicker.allowsEditing = NO;
+    self.imagePicker.videoMaximumDuration = 10;
+    
+    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+        self.imagePicker.sourceType = UIImagePickerControllerSourceTypeCamera;
+    }
+    else {
+        self.imagePicker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+    }
+    
+    self.imagePicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:self.imagePicker.sourceType];
 }
 
 #pragma mark - Table view data source
@@ -127,7 +128,6 @@
         if (self.imagePicker.sourceType == UIImagePickerControllerSourceTypeCamera) {
             // Save the image!
             UIImageWriteToSavedPhotosAlbum(self.image, nil, nil, nil);
-
         }
     }
     else {
@@ -149,7 +149,7 @@
 #pragma mark - IBActions
 
 - (IBAction)cancel:(id)sender {
-    [self reset];
+    [self resetView];
     
     [self.tabBarController setSelectedIndex:0];
 }
@@ -187,41 +187,7 @@
         fileType = @"video";
     }
     
-    PFFile *file = [PFFile fileWithName:fileName data:fileData];
-    [file saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-        if (error) {
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"An error occurred!"
-                                                                message:@"Please try sending your message again."
-                                                               delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
-            [alertView show];
-        }
-        else {
-            PFObject *message = [PFObject objectWithClassName:@"Messages"];
-            [message setObject:file forKey:@"file"];
-            [message setObject:fileType forKey:@"fileType"];
-            [message setObject:self.recipients forKey:@"recipientIds"];
-            [message setObject:[[PFUser currentUser] objectId] forKey:@"senderId"];
-            [message setObject:[[PFUser currentUser] username] forKey:@"senderName"];
-            [message saveInBackgroundWithBlock:^(BOOL succeeded, NSError *error) {
-                if (error) {
-                    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"An error occurred!"
-                                                                        message:@"Please try sending your message again."
-                                                                       delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
-                    [alertView show];
-                }
-                else {
-                    // Everything was successful!
-                    [self reset];
-                }
-            }];
-        }
-    }];
-}
-
-- (void)reset {
-    self.image = nil;
-    self.videoFilePath = nil;
-    [self.recipients removeAllObjects];
+    [parseManager uploadFile:fileData withFileName:fileName withFileType:fileType withRecipients:self.recipients];
 }
 
 - (UIImage *)resizeImage:(UIImage *)image toWidth:(float)width andHeight:(float)height {
@@ -233,6 +199,14 @@
     UIGraphicsEndImageContext();
     
     return resizedImage;
+}
+
+#pragma mark - ParseManager delegate methods
+
+- (void)resetView {
+    self.image = nil;
+    self.videoFilePath = nil;
+    [self.recipients removeAllObjects];
 }
 
 @end

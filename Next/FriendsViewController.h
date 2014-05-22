@@ -8,10 +8,12 @@
 
 #import <UIKit/UIKit.h>
 #import <Parse/Parse.h>
+#import "ParseManager.h"
 
-@interface FriendsViewController : UITableViewController
+@interface FriendsViewController : UITableViewController <ParseManagerProtocol>
 
-@property(nonatomic, strong)PFRelation *friendsRelation;
-@property(nonatomic, strong)NSArray *friends;
+//@property (nonatomic, strong) PFRelation *friendsRelation;
+@property (nonatomic) ParseManager *parseManager;
+@property (nonatomic, strong) NSArray *friends;
 
 @end
