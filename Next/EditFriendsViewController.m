@@ -23,8 +23,6 @@
     parseManager = [[ParseManager alloc] init];
     parseManager.delegate = self;
     [parseManager getFriendsWithFilter:@"All"];
-    
-    self.currentUser = [PFUser currentUser];
 }
 
 #pragma mark - ParseManager delegate methods
@@ -54,7 +52,8 @@
     PFUser *user = [self.allUsers objectAtIndex:indexPath.row];
     cell.textLabel.text = user.username;
     
-    if ([self isFriend:user])
+    NSArray *friendObjectIds = [self.friends valueForKey:@"objectId"];
+    if ([friendObjectIds containsObject:[user objectId]])
     {
         cell.accessoryType = UITableViewCellAccessoryCheckmark;
     }
@@ -75,18 +74,13 @@
     UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
     
     PFUser *user = [self.allUsers objectAtIndex:indexPath.row];
-    
-    if ([self isFriend:user])
-    {
+    NSArray *friendObjectIds = [self.friends valueForKey:@"objectId"];
+    if ([friendObjectIds containsObject:[user objectId]]) {
+        int indexToRemove = [friendObjectIds indexOfObject:[user objectId]];
+        [self.friends removeObjectAtIndex:indexToRemove];
+        
         // Remove Checkmark
         cell.accessoryType = UITableViewCellAccessoryNone;
-       
-        // Remove from Array
-        NSArray *friendObjectIds = [self.friends valueForKey:@"objectId"];
-        if ([friendObjectIds containsObject:[user objectId]]) {
-            int indexToRemove = [friendObjectIds indexOfObject:[user objectId]];
-            [self.friends removeObjectAtIndex:indexToRemove];
-        }
         
         // Remove from Backend
         [parseManager removeFriend:user];
@@ -100,17 +94,5 @@
 }
 
 #pragma mark - Helper Methods
-
--(BOOL)isFriend:(PFUser *)user
-{
-    for (PFUser *friend in self.friends)
-    {
-        if ([friend.objectId isEqualToString: user.objectId])
-        {
-            return YES;
-        }
-    }
-    return NO;
-}
 
 @end

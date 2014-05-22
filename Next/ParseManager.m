@@ -54,8 +54,11 @@
     NSArray *cachedObjectIds = [[NSArray alloc] initWithArray:[objectsFromCache valueForKey:@"objectId"]];
     NSArray *networkObjectIds = [[NSArray alloc] initWithArray:[objectsFromNetwork valueForKey:@"objectId"]];
     
-    for (NSString *objectId in cachedObjectIds) {
-        if (![networkObjectIds containsObject:objectId])
+    if ([cachedObjectIds count] != [networkObjectIds count])
+        return YES;
+    
+    for (NSString *objectId in networkObjectIds) {
+        if (![cachedObjectIds containsObject:objectId])
             return YES;
     }
     
@@ -108,7 +111,6 @@
                     [alertView show];
                 }
                 else {
-                    // Everything was successful!
                     if ([self.delegate respondsToSelector:@selector(resetView)])
                         [self.delegate resetView];
                 }

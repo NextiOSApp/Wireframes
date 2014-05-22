@@ -13,10 +13,7 @@
 @interface EditFriendsViewController : UITableViewController <ParseManagerProtocol>
 
 @property (nonatomic) ParseManager *parseManager;
-@property (nonatomic, strong) PFUser *currentUser;
 @property (nonatomic, strong) NSArray *allUsers;
 @property (nonatomic, strong) NSMutableArray *friends;
-
-- (BOOL)isFriend:(PFUser *)user;
 
 @end

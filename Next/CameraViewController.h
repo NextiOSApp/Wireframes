@@ -17,7 +17,6 @@
 @property (nonatomic, strong) UIImage *image;
 @property (nonatomic, strong) NSString *videoFilePath;
 @property (nonatomic, strong) NSArray *friends;
-//@property (nonatomic, strong) PFRelation *friendsRelation;
 @property (nonatomic, strong) NSMutableArray *recipients;
 @property (nonatomic) ParseManager *parseManager;
 
